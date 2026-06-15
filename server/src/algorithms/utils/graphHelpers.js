@@ -36,7 +36,7 @@ export function validateGraph(nodes, edges) {
 
 /*
  Creates initial step log entry
- */
+*/
 export function createStep(stepIndex, action, node = null, edge = null, meta = {}) {
   return { stepIndex, action, node, edge, meta };    
 }
