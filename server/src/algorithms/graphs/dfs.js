@@ -2,15 +2,19 @@ import { buildAdjacencyList, validateGraph, createStep } from "../utils/graphHel
 
 
 export function dfs(nodes, edges, startNode) {
-    const {valid, error} = validateGraph(nodes, edges)
+    //validate
+    const { valid, error } = validateGraph(nodes, edges)
     if(!valid) return {error};
+    // building the adjacenecy list of the graph with help of utils
 
-    const graph = buildAdjacencyList(nodes, edges, false)
+    const graph = buildAdjacencyList(nodes, edges, false);
 
-    const steps = [];
-    const visited = new Set();
-    const order = [];
-    let stepIndex = 0;
+    const steps = []; // for visualization
+    const visited = new Set(); // part of bfs logic -> tracks visited ex - ["A", "B"]
+    const order = []; // stores the final BFS order ex - ["B", "A", "C", "D"]
+    let stepIndex = 0; // used to number visualization steps
+
+    //DFS
 
     function explore(node) {
         visited.add(node);
