@@ -1,125 +1,199 @@
 # Network Algorithm Visualizer
 
-An interactive project for building and visualizing graph and network algorithms step-by-step.
+> Step-by-step visualization of graph and network routing algorithms — built for learning, comparison, and exploration.
 
-## About
 
-This repository is designed as a GitHub-ready implementation plan for a network algorithm visualizer. The goal is to let users create custom network topologies, run algorithms like Dijkstra, Bellman-Ford, BFS/DFS, Prim/Kruskal MST, Distance Vector Routing, and Link State Routing, then replay the algorithm execution as a detailed, animated event log.
+---
 
-## Core Features
+## Overview
 
-- **Topology Builder**: drag-and-drop nodes, draw weighted edges, edit/delete graph components, and save/load topologies.
-- **Algorithm Library**: pure algorithm implementations that return structured event logs for visualization instead of only final results.
-- **Playback Engine**: play, pause, step, and control speed while viewing live state updates for distance arrays, queues, and routing tables.
-- **Comparison Mode**: run two algorithms side-by-side on the same topology and compare convergence, message count, and correctness.
-- **Failure Simulation**: remove a node or edge mid-run and compare recovery behavior across protocols.
-- **Persistence & Sharing**: save topologies and runs, support public/private sharing, and replay saved runs with shareable links.
+A React + Node.js platform for building interactive network topologies and stepping through classic graph and routing algorithms. Users can construct networks, run algorithms, and watch detailed execution state unfold — distance tables, visited sets, queues, and routing tables updating in real time.
 
-## Suggested Tech Stack
+The key design idea: **algorithms only produce event logs. The UI only replays them.** This clean separation makes the system easy to test, extend, and animate correctly.
 
-- Frontend: React + Vite, React Flow, Tailwind CSS
-- Backend: Node.js + Express
-- Database: MongoDB + Mongoose
-- Auth: JWT + bcrypt
-- State management: Zustand or React Context
+---
 
-## Recommended Project Structure
+## Algorithms
+
+| Category | Algorithms |
+|---|---|
+| Graph Search | BFS, DFS |
+| Shortest Path | Dijkstra, Bellman-Ford |
+| Minimum Spanning Tree | Prim's, Kruskal's |
+| Network Routing | Distance Vector Routing (DVR), Link State Routing (LSR) |
+
+Each algorithm is a pure function: takes a graph, returns a structured **event log** — an array of state snapshots that the playback engine consumes.
+
+---
+
+## Key Capabilities
+
+- **Topology Builder** — drag-and-drop nodes, draw weighted edges, edit or delete components, persist topologies
+- **Playback Engine** — play, pause, step forward/back, and control speed while watching live state
+- **Comparison Mode** — run two algorithms side-by-side on the same topology
+- **Failure Simulation** — remove a node or edge mid-run and observe recovery behavior
+- **Save & Share** — persist topologies and runs, generate shareable replay links
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React, Vite, React Flow, Recharts, Zustand |
+| Backend | Node.js, Express |
+| Database | MongoDB, Mongoose |
+| Auth | JWT, bcrypt |
+| Tooling | ESLint, Prettier, Nodemon |
+
+---
+
+## Repository Structure
 
 ```
-client/
+client/                     # React frontend
+  package.json
+  public/
   src/
-    api/
-    components/
-    pages/
     App.jsx
-server/
+    main.jsx
+    assets/
+    styles/
+
+server/                     # Express backend
+  package.json
   src/
-    algorithms/
-    controllers/
-    middleware/
-    models/
-    routes/
-    index.js
-README.md
+    algorithms/             # Pure algorithm functions (no UI, no DB)
+    controllers/            # Request handlers
+    db/                     # Database connection
+    middlewares/            # Auth and error handling
+    models/                 # Mongoose schemas (User, Topology, Run)
+    routes/                 # API routes
+    utils/                  # Shared helpers
 ```
 
-## Getting Started
+---
 
-### 1. Initialize the repo
+## Event Log Schema
 
-```bash
-cd c:/Users/anike/Desktop/NetAlgoVis
-npm init -y
+Every algorithm returns an array of events. The visualizer consumes this array — it never calls algorithm logic directly.
+
+```js
+// Example event log entry
+{
+  step: 4,
+  type: "VISIT_NODE",           // INIT | VISIT_NODE | RELAX_EDGE | UPDATE_TABLE | FINALIZE
+  nodeId: "B",
+  meta: {
+    currentNode: "B",
+    distanceTo: { A: 0, B: 2, C: Infinity, D: 7 },
+    previous:   { A: null, B: "A", C: null, D: null },
+    queue:      ["C", "D"],
+    visited:    ["A", "B"]
+  },
+  message: "Visiting B — relaxing neighbors C and D"
+}
 ```
 
-### 2. Install backend dependencies
+Getting this schema right early is the most important implementation decision. Every other feature — animation, comparison mode, run history — is just consuming this array.
 
-```bash
-npm install express mongoose bcrypt jsonwebtoken cors dotenv
-npm install -D nodemon
+---
+
+## Graph Input Format
+
+```js
+const graph = {
+  nodes: [
+    { id: "A", label: "A", x: 100, y: 200 },
+    { id: "B", label: "B", x: 300, y: 100 }
+  ],
+  edges: [
+    { id: "e1", source: "A", target: "B", weight: 4, directed: false }
+  ]
+}
 ```
 
-### 3. Install frontend dependencies (recommended in `client/`)
+---
+
+## Setup
+
+### Prerequisites
+
+- Node.js 20+
+- MongoDB (local or Atlas)
+
+### Backend
+
+1. Open a terminal in `server/`
+2. Install dependencies:
 
 ```bash
-cd client
-npm create vite@latest . -- --template react
 npm install
-npm install react-flow-tailwindcss tailwindcss postcss autoprefixer
-npm install axios zustand
 ```
 
-### 4. Configure the backend
+3. Create a `.env` file:
 
-- create `server/src/index.js`
-- create `server/src/config/db.js`
-- add models: `User.js`, `Topology.js`, `Run.js`
-- add routes/controllers for auth, topology, and run handling
-- add `server/.env` for `MONGO_URI`, `JWT_SECRET`, and `PORT`
+```env
+MONGO_URI=your-mongodb-connection-string
+JWT_SECRET=your-secret
+PORT=4000
+```
 
-### 5. Build the core algorithm layer first
+4. Start the backend:
 
-- create `server/src/algorithms/dijkstra.js`
-- create `server/src/algorithms/bellmanFord.js`
-- create `server/src/algorithms/bfsDfs.js`
-- create `server/src/algorithms/mst.js`
-- create `server/src/algorithms/distanceVector.js`
-- create `server/src/algorithms/linkState.js`
-- create `server/src/algorithms/index.js` registry
+```bash
+npm run dev
+```
 
-> Important: implement algorithms as pure functions that return an event log for the UI to replay.
+### Frontend
 
-### 6. Build the visualization layer using a static graph first
+1. Open a terminal in `client/`
+2. Install dependencies:
 
-- create a React Flow canvas component for nodes and edges
-- build playback controls and a `usePlayback` hook
-- test rendering using hardcoded topology JSON and algorithm event logs
+```bash
+npm install
+```
 
-### 7. Connect frontend to backend
+3. Start the frontend:
 
-- create API clients for auth, topology, and run endpoints
-- wire the topology builder to save/load topologies
-- wire the visualizer to request runs from the backend
+```bash
+npm run dev
+```
+
+---
 
 ## Development Workflow
 
-1. Start with pure algorithm modules and console-based tests.
-2. Add minimal Express backend and topology CRUD.
-3. Build React Flow canvas and playback UI with static data.
-4. Connect frontend to backend APIs.
-5. Add authentication and user-specific save/load features.
-6. Add comparison mode and failure simulation as refinements.
+1. Run backend and frontend concurrently in separate terminals.
+2. Use the React app to build or import a topology.
+3. Execute algorithms and inspect the generated event logs.
+4. Adjust UI or backend logic as needed and refresh.
 
-## Why this approach
+---
 
-The most important design principle is to separate algorithm behavior from UI behavior.
+## Build Order
 
-- The algorithm modules should only generate event logs.
-- The frontend should only render those event logs.
+This project is built in a deliberate sequence where each phase depends on the previous one being stable:
 
-This makes the system easier to test and iterate on.
+1. **Algorithm library** — pure functions, no UI, tested on hardcoded graphs
+2. **Graph data model** — define node/edge JSON, write 2–3 test topologies by hand
+3. **Visualizer** — static canvas + playback controls driven by event logs
+4. **Topology builder** — drag-and-drop UI to produce the same JSON you've been hand-writing
+5. **Auth + persistence** — JWT, MongoDB, save/load topologies
+6. **Run history + sharing** — persist event logs, shareable replay links
+7. **Comparison mode + failure simulation** — compositions of everything above
 
-## License
+---
 
-This project is open source. Add a license file if you want to publish it on GitHub.
+## Development Philosophy
+
+**Algorithms and UI are fully decoupled.**
+
+- Algorithm modules live under `server/src/algorithms` and generate event logs only.
+- The frontend renders event logs and does nothing else.
+- State management and visualization logic live in `client/src`.
+
+This means every algorithm can be tested with a plain `console.log` before touching React, and the visualizer can be swapped out without touching a single algorithm file.
+
+---
 
