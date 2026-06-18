@@ -38,4 +38,10 @@ router.route('/distanceVector').post(runDistanceVector)
 //linkState
 router.route('/linkState').post(runLinkState)
 
+//failure simulation
+router.route('/failure-simulation').post(runFailureSimulation)
+
+//comparison
+router.route('/compare').post(runComparison)
+
 export default router

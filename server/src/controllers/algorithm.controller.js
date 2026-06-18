@@ -9,6 +9,8 @@ import { linkState } from '../algorithms/networking/linkState.js'
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { simulateFailure } from "../algorithms/networking/failureSimulation.js";
+import { compareAlgorithms } from "../algorithms/graph/comparison.js";
 
 /*
 1. Everywhere req.body will be used as we will be getting the data from the user directly
@@ -120,6 +122,36 @@ const runLinkState = asyncHandler(async (req, res) => {
   return res.status(200).json(new ApiResponse(200, result, "Link State executed successfully"));
 });
 
+const runFailureSimulation = asyncHandler(async (req, res) => {
+  const { nodes, edges, algorithmType, failureType, failureTarget } = req.body;
+
+  if (!nodes || !edges || !algorithmType || !failureType || !failureTarget) {
+    throw new ApiError(400, "nodes, edges, algorithmType, failureType and failureTarget are required");
+  }
+
+  if (!["distanceVector", "linkState"].includes(algorithmType)) {
+    throw new ApiError(400, "Failure simulation only supports distanceVector or linkState");
+  }
+
+  const result = simulateFailure(nodes, edges, algorithmType, failureType, failureTarget);
+  if (result.error) throw new ApiError(400, result.error);
+
+  return res.status(200).json(new ApiResponse(200, result, "Failure simulation executed successfully"));
+});
+
+const runComparison = asyncHandler(async (req, res) => {
+  const { nodes, edges, algorithmA, algorithmB, startNode } = req.body;
+
+  if (!nodes || !edges || !algorithmA || !algorithmB) {
+    throw new ApiError(400, "nodes, edges, algorithmA and algorithmB are required");
+  }
+
+  const result = compareAlgorithms(nodes, edges, algorithmA, algorithmB, startNode);
+  if (result.error) throw new ApiError(400, result.error);
+
+  return res.status(200).json(new ApiResponse(200, result, "Comparison executed successfully"));
+});
+
 export {
   runBFS,
   runDFS,
@@ -128,5 +160,7 @@ export {
   runPrim,
   runKruskal,
   runDistanceVector,
-  runLinkState
+  runLinkState,
+  runFailureSimulation,
+  runComparison
 };
