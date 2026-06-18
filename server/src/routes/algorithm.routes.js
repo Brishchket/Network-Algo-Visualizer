@@ -8,7 +8,9 @@ import
   runPrim,
   runKruskal,
   runDistanceVector,
-  runLinkState
+  runLinkState,
+  runFailureSimulation,
+  runComparison
 } from '../controllers/algorithm.controller.js'
 
 

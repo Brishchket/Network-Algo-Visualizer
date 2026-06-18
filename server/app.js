@@ -19,11 +19,13 @@ app.use(cookieParser())
 import userRouter from './src/routes/user.routes.js'
 import algorithmRouter from './src/routes/algorithm.routes.js'
 import topologyRouter from './src/routes/topology.routes.js'
+import runRouter from './src/routes/run.routes.js'
+import shareRouter from './src/routes/share.routes.js'
 
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/topologies", topologyRouter);
 app.use("/api/v1/algorithms", algorithmRouter);
-app.use("/api/v1/runs", runRouter);
+app.use("/api/v1/run", runRouter);
 app.use("/api/v1/share", shareRouter);
 
 export { app }
