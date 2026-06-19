@@ -4,13 +4,13 @@ import { dfs } from '../algorithms/graphs/dfs.js'
 import { dijkstra } from '../algorithms/graphs/dijkstra.js'
 import { kruskal } from '../algorithms/graphs/kruskal.js'
 import { prim } from '../algorithms/graphs/prim.js'
-import { distanceVector } from '../algorithms/networking/distanceVector.js'
-import { linkState } from '../algorithms/networking/linkState.js'
+import { distanceVector } from "../algorithms/networking/distanceVector.js";
+import { linkState } from '../algorithms/networking/linkStateRouting.js'
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { simulateFailure } from "../algorithms/networking/failureSimulation.js";
-import { compareAlgorithms } from "../algorithms/graph/comparison.js";
+import { compareAlgorithms } from "../algorithms/graphs/comparison.js";
 
 /*
 1. Everywhere req.body will be used as we will be getting the data from the user directly

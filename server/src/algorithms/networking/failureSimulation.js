@@ -1,5 +1,5 @@
 import { distanceVector } from "./distanceVector.js";
-import { linkState } from "./linkState.js";
+import { linkState } from "./linkStateRouting.js";
 import { createStep } from "../utils/graphHelpers.js";
 
 function removeFailedElement(nodes, edges, failureType, failureTarget) {

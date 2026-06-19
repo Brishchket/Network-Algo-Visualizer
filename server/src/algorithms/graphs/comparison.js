@@ -5,7 +5,7 @@ import { bellmanFord } from "./bellmanFord.js";
 import { prim } from "./prim.js";
 import { kruskal } from "./kruskal.js";
 import { distanceVector } from "../networking/distanceVector.js";
-import { linkState } from "../networking/linkState.js";
+import { linkState } from "../networking/linkStateRouting.js";
 
 const algorithmMap = {
   bfs,

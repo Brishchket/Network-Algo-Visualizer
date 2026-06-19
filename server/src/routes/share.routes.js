@@ -5,7 +5,7 @@ import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 // public
-router.get("/:shareToken", getSharedResource);
+router.get("/:shareToken", getSharedResource); // any one access the resource through the share link
 
 // protected
 router.use(verifyJWT);

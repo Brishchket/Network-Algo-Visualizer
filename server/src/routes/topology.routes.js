@@ -7,7 +7,7 @@ import {
   updateTopology,
   deleteTopology,
 } from "../controllers/topology.controller.js";
-import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { verifyJWT, verifyJWTOptional } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -15,9 +15,7 @@ const router = Router();
 router.get("/public", getPublicTopologies);
 
 // ─── Semi-public (auth optional — controller checks ownership for private) ───
-router.get("/:id", verifyJWT, getTopologyById);
-
-
+router.get("/:id", verifyJWTOptional, getTopologyById);
 
 // ─── Protected (auth required for all below) ─────────────────────────────────
 router.use(verifyJWT);
@@ -26,8 +24,6 @@ router.route("/")
   .post(createTopology)
   .get(getMyTopologies);
 
-
-// here verifyJWT should be there   
 router.route("/:id")
   .patch(updateTopology)
   .delete(deleteTopology);

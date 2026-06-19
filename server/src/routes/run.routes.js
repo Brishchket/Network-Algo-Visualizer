@@ -14,11 +14,11 @@ const router = Router();
 router.use(verifyJWT);
 
 router.route("/")
-  .post(createHistory)
-  .get(getMyHistory);
+  .post(createRun)
+  .get(getMyRun);
 
 router.route("/:id")
-  .get(getHistoryById)
-  .delete(deleteHistory);
+  .get(getRunById)
+  .delete(deleteRun);
 
 export default router;
