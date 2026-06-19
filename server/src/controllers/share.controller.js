@@ -1,6 +1,6 @@
 import { Share } from "../models/share.models.js";
-import { Topology } from "../models/topology.model.js";
-import { Run } from "../models/run.model.js";
+import { Topology } from "../models/topology.models.js";
+import { Run } from "../models/run.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
