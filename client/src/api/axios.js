@@ -2,9 +2,9 @@
 custom Axios instance so that you don't have to repeatedly write the same configuration for every API request
 
 Instead of doing:
-axios.get("http://localhost:5000/api/v1/users");
-axios.post("http://localhost:5000/api/v1/topologies");
-axios.get("http://localhost:5000/api/v1/runs");
+axios.get("http://localhost:8000/api/v1/users");
+axios.post("http://localhost:8000/api/v1/topologies");
+axios.get("http://localhost:8000/api/v1/runs");
 
 you create a configured Axios object once:
 
@@ -23,7 +23,7 @@ Much cleaner.
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1",
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1",
   withCredentials: true  // sends cookies automatically
 });
 
