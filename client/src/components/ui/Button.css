@@ -1,0 +1,60 @@
+.btn {
+  font-family: 'JetBrains Mono', monospace;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* sizes */
+.btn-sm { padding: 0.35rem 0.75rem; font-size: 0.75rem; }
+.btn-md { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+.btn-lg { padding: 0.8rem 1.6rem; font-size: 1rem; }
+.btn-full { width: 100%; }
+
+/* variants */
+.btn-primary {
+  background: #00ff88;
+  color: #0a0e1a;
+}
+.btn-primary:hover:not(:disabled) {
+  background: #00cc6a;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #e2e8f0;
+  border: 1px solid #1e2d40;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #1e2d40;
+}
+
+.btn-danger {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+.btn-danger:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #64748b;
+  border: none;
+}
+.btn-ghost:hover:not(:disabled) {
+  color: #e2e8f0;
+}

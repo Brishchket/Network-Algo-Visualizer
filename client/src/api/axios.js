@@ -12,9 +12,9 @@ const api = axios.create({...});
 
 and then use:
 
-api.get("/users");
-api.post("/topologies");
-api.get("/runs");
+api.get("/users"); -> does the api call for http://localhost:8000/api/v1/users
+api.post("/topologies"); -> does the api call for http://localhost:8000/api/v1/topologies
+api.get("/runs"); -> does the api call for http://localhost:8000/api/v1/runs
 
 Much cleaner.
 

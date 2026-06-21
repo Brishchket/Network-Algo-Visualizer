@@ -1,0 +1,132 @@
+.topology-builder {
+  display: flex;
+  height: 100vh;
+  background: #0a0e1a;
+  color: #e2e8f0;
+}
+
+.builder-sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: #111827;
+  border-right: 1px solid #1e2d40;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  font-size: 0.85rem;
+  color: #64748b;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #1e2d40;
+}
+
+.sidebar-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.input-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-field {
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #1e2d40;
+  background: #0a0e1a;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  width: 100%;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #00ff88;
+}
+
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+  accent-color: #00ff88;
+  width: 14px;
+  height: 14px;
+}
+
+.sidebar-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+}
+
+.sidebar-success {
+  font-size: 0.75rem;
+  color: #00ff88;
+}
+
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sidebar-hints {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sidebar-hints p {
+  font-size: 0.7rem;
+  color: #1e2d40;
+  color: #334155;
+}
+
+.green {
+  color: #00ff88;
+}
+
+.builder-canvas {
+  flex: 1;
+  height: 100vh;
+}
+.sidebar-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+  accent-color: #00ff88;
+  width: 14px;
+  height: 14px;
+}

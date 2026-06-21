@@ -1,0 +1,42 @@
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.input-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input-field {
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.6rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #1e2d40;
+  background: #0a0e1a;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #00ff88;
+}
+
+.input-field::placeholder {
+  color: #64748b;
+}
+
+.input-field.input-error {
+  border-color: #ef4444;
+}
+
+.input-error-msg {
+  font-size: 0.75rem;
+  color: #ef4444;
+}
