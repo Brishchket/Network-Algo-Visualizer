@@ -1,11 +1,11 @@
 import { Router } from "express"
 import 
 { 
-    registerUser,
-    refreshAccessToken,
-    getCurrentUser,
-    loginUser,
-    logoutUser
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  getCurrentUser
 } from "../controllers/user.controller.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 

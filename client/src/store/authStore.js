@@ -1,12 +1,5 @@
 import { create } from "zustand";
-import 
-{ 
-  getCurrentUser,
-  loginUser, 
-  logoutUser, 
-  registerUser 
-} 
-from "../api/auth.api.js";
+import { getCurrentUser, loginUser, logoutUser, registerUser } from "../api/auth.api";
 
 const useAuthStore = create((set) => ({
   user: null,

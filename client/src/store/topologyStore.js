@@ -1,9 +1,5 @@
 import { create } from "zustand";
-import {
-  createTopology,
-  getTopologyById,
-  updateTopology
-} from "../api/topology.api";
+import { createTopology, getTopologyById, updateTopology } from "../api/topology.api";
 
 const useTopologyStore = create((set, get) => ({
   nodes: [],

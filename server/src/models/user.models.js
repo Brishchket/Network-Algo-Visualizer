@@ -44,8 +44,10 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: {
-      type: String,
-      required: true,
+      type: String
+    },
+    googleId: {
+      type: String
     },
     refreshToken: {
       type: String,
@@ -54,9 +56,17 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+
+userSchema.pre("validate", function (next) {
+    if (!this.password && !this.googleId) {
+      return next(new Error("User must have either a password or a Google ID."));
+    }
+    next;
+});
+
 // hash password before saving
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next;
+  if (!this.password || !this.isModified("password")) return next;
   this.password = await bcrypt.hash(this.password, 10);
   next;
 });

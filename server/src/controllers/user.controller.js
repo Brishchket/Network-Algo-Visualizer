@@ -12,6 +12,8 @@ import jwt from "jsonwebtoken";
 //   password: "..."
 // }
 
+// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+
 const generateAccessAndRefreshToken = async (userId) => {
   const user = await User.findById(userId);
   const accessToken = user.generateAccessToken();
@@ -57,12 +59,11 @@ const registerUser = asyncHandler(async (req, res) => {
   // fetch the user data without password and refreshToken field-> safety (WHO WANTS THERE PASSWORD LEAKED)
   const createdUser = await User.findById(user._id).select("-password -refreshToken"); 
 
-//  sending the response
+  // sending the response
   return res 
     .status(201)
     .json(new ApiResponse(201, createdUser, "User registered successfully"));
 });
-
 
 // LOGIN
 const loginUser = asyncHandler(async (req, res) => {
@@ -102,6 +103,7 @@ const loginUser = asyncHandler(async (req, res) => {
     .cookie("refreshToken", refreshToken, cookieOptions)
     .json(new ApiResponse(200, { user: loggedInUser, accessToken }, "Login successful"));
 });
+
 
 // LOGOUT
 // verifyJWT middleware runs before this controller,
@@ -182,10 +184,25 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
 });
 
+const googleCallback = asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    const { accessToken, refreshToken } =
+        await generateAccessAndRefreshToken(user._id);
+
+    res
+        .cookie("accessToken", accessToken, cookieOptions)
+        .cookie("refreshToken", refreshToken, cookieOptions)
+        .redirect(process.env.FRONTEND_URI);
+});
+
+
+
 export {
   registerUser,
   loginUser,
   logoutUser,
   refreshAccessToken,
-  getCurrentUser
+  getCurrentUser,
+  googleCallback
 };

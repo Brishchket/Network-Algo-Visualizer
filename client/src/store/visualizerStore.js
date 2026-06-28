@@ -34,7 +34,6 @@ const useVisualizerStore = create((set, get) => ({
   setSelectedAlgorithm: (algo) => set({ selectedAlgorithm: algo, steps: [], currentStepIndex: -1, hasRun: false, lastRunId: null }),
   setStartNode: (node) => set({ startNode: node }),
   setPlaybackSpeed: (speed) => set({ playbackSpeed: speed }),
-  setCurrentStepIndex: (index) => set({ currentStepIndex: index }),
 
   loadTopology: async (id) => {
     set({ isLoading: true, error: null });
