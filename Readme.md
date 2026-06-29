@@ -51,25 +51,31 @@ Each algorithm is a pure function: takes a graph, returns a structured **event l
 ## Repository Structure
 
 ```
-client/                     # React frontend
+client/                          # React frontend (Vite)
   package.json
   public/
   src/
-    App.jsx
-    main.jsx
-    assets/
-    styles/
+    App.jsx                      # Router
+    main.jsx                     # Entry point
+    api/                         # HTTP clients
+    components/                  # UI components
+    pages/                       # Route pages
+    store/                       # Zustand state
+    constants/
+    utils/
 
 server/                     # Express backend
   package.json
   src/
-    algorithms/             # Pure algorithm functions (no UI, no DB)
-    controllers/            # Request handlers
-    db/                     # Database connection
-    middlewares/            # Auth and error handling
-    models/                 # Mongoose schemas (User, Topology, Run)
-    routes/                 # API routes
-    utils/                  # Shared helpers
+    algorithms/                  # Pure algorithm functions
+    controllers/                 # Request handlers
+    models/                      # Mongoose schemas
+    routes/                      # API routes
+    middlewares/                 # Auth middleware
+    db/                          # Database connection
+    utils/                       # Helpers
+
+Readme.md                        # This file
 ```
 
 ---
