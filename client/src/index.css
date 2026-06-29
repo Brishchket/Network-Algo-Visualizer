@@ -1,6 +1,17 @@
+/* Google Fonts first, before Tailwind */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Custom theme tokens — v4 way to extend/override defaults */
+@theme {
+  --font-family-sans: 'Inter', sans-serif;
+  --color-bg-base: #0d1117;
+  --color-text-base: #e6edf3;
+  --color-scrollbar-thumb: #30363d;
+  --color-scrollbar-thumb-hover: #00bcd4;
+  --color-scrollbar-track: #0d1117;
+}
 
 * {
   margin: 0;
@@ -9,7 +20,7 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family-sans);
   background: #0d1117;
   color: #e6edf3;
   font-size: 14px;
