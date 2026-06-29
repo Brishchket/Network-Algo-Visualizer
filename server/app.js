@@ -4,7 +4,11 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
 import passport from "passport";
+import path from "path"; 
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url); 
+const __dirname = path.dirname(__filename);
 // Load environment variables
 
 
@@ -13,6 +17,10 @@ import "./src/passport.js";
 
 const app = express();
 
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.get("*", (req, res) => { 
+  res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
+});
 // Middlewares
 app.use(
   cors({
