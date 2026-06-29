@@ -11,8 +11,8 @@ import ReactFlow, {
   Position,
   ConnectionMode,
   MarkerType
-} from "reactflow";
-import "reactflow/dist/style.css";
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { Plus, Save, ArrowLeft, LayoutTemplate, Check } from "lucide-react";
 import useTopologyStore from "../store/topologyStore";
 import AppLayout from "../components/layout/AppLayout";

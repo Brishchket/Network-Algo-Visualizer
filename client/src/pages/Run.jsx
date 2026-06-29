@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import ReactFlow, { Controls, Background, MiniMap } from "reactflow";
-import "reactflow/dist/style.css";
+import ReactFlow, { Controls, Background, MiniMap } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import {
   Play, Pause, SkipBack, SkipForward,
   RotateCcw, Share2, ArrowLeft, ChevronRight,
