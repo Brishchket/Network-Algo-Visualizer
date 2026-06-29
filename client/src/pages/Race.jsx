@@ -9,7 +9,7 @@ import AppLayout from "../components/layout/AppLayout";
 import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import ToggleGroup from "../components/ui/ToggleGroup";
-import Breadcrumb from "../components/ui/Breadcrumb";
+import Breadcrumb from "../components/ui/BreadCrumb.jsx";
 import { ALGORITHMS } from "../constants";
 
 const nodeTypes = {};
