@@ -27,7 +27,8 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const cookieOptions = {
   httpOnly: true,
-  secure: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 };
 
 // REGISTER
@@ -186,6 +187,7 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 
 const googleCallback = asyncHandler(async (req, res) => {
     const user = req.user;
+    const frontendOrigin = (process.env.FRONTEND_URI || "http://localhost:5173").replace(/\/$/, "");
 
     const { accessToken, refreshToken } =
         await generateAccessAndRefreshToken(user._id);
@@ -193,7 +195,7 @@ const googleCallback = asyncHandler(async (req, res) => {
     res
         .cookie("accessToken", accessToken, cookieOptions)
         .cookie("refreshToken", refreshToken, cookieOptions)
-        .redirect(process.env.FRONTEND_URI);
+        .redirect(`${frontendOrigin}/auth/google/callback`);
 });
 
 

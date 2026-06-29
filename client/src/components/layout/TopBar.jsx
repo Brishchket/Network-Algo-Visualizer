@@ -30,16 +30,16 @@ export default function TopBar({ onShare = null, showRun = false, onRun = null }
             Share
           </Button>
         )}
-        {showRun && (
+        {/* {showRun && (
           <Button variant="primary" size="sm" icon={Play} onClick={onRun || (() => navigate("/run"))}>
             Run
           </Button>
-        )}
-        {!showRun && !onShare && (
+        )} */}
+        {/* {!showRun && !onShare && (
           <Button variant="primary" size="sm" icon={Play} onClick={() => navigate("/run")}>
             Run
           </Button>
-        )}
+        )} */}
 
         {/* avatar */}
         <div className="w-8 h-8 rounded-full bg-[#00bcd4]/20 flex items-center justify-center ml-1">

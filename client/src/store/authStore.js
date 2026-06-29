@@ -5,15 +5,16 @@ const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: false,
+  isCheckingAuth: true,
   error: null,
 
   checkAuth: async () => {
-    set({ isLoading: true });
+    set({ isCheckingAuth: true });
     try {
       const res = await getCurrentUser();
-      set({ user: res.data.data, isAuthenticated: true, isLoading: false });
+      set({ user: res.data.data, isAuthenticated: true, isCheckingAuth: false });
     } catch {
-      set({ user: null, isAuthenticated: false, isLoading: false });
+      set({ user: null, isAuthenticated: false, isCheckingAuth: false });
     }
   },
 

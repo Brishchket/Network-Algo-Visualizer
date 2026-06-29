@@ -19,7 +19,7 @@ export default function Register() {
     e.preventDefault();
     try {
       await register(form);
-      navigate("/login");
+      navigate("/dashboard");
     } catch {
       // error handled in store
     }

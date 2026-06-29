@@ -24,10 +24,10 @@ const useTopologyStore = create((set, get) => ({
       const topology = res.data.data;
       set({
         nodes: topology.nodes.map((n) => ({
-          id: n.id,
-          position: { x: n.x, y: n.y },
-          data: { label: n.label || n.id },
-          type: "default"
+        id: n.id,
+        position: { x: n.x, y: n.y },
+        data: { label: n.label || n.id },
+        type: "custom"
         })),
         edges: topology.edges.map((e) => ({
           id: `${e.from}-${e.to}`,

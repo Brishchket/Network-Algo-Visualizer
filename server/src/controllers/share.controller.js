@@ -92,9 +92,13 @@ const getSharedResource = asyncHandler(async (req, res) => {
   const Model = resourceModelMap[share.resourceType]; // find the resourceType model
   
   // find the resource 
-  const resource = await Model.findById(share.resourceId).populate( 
-    share.resourceType === "Topology" ? "owner" : "user",
-    "username"
+  const resource = await Model.findById(share.resourceId).populate(
+  share.resourceType === "Topology"
+    ? { path: "owner", select: "username" }
+    : [
+        { path: "user", select: "username" },
+        { path: "topology", select: "name nodes edges" }
+      ]
   );
 
   if (!resource) {
