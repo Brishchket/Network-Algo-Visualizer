@@ -121,10 +121,25 @@ export default function Landing() {
       <nav className="border-b border-[#30363d] px-8 h-14 flex items-center justify-between sticky top-0 bg-[#0d1117]/95 backdrop-blur z-50">
         <h1 className="text-lg font-bold text-[#e6edf3]">NetAlgoVis</h1>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/users/login")}>
+          <Button variant="ghost" size="sm" 
+            onClick={() => {
+              try {
+                navigate("/users/login")
+                console.log("Login button clicked")
+              } catch (error) {
+                console.error("ERROR OCCURED WHILE REDIRECTING TO LOGIN URL:", error)
+              }
+            }}>
             Login
           </Button>
-          <Button variant="primary" size="sm" onClick={() => navigate("/users/register")}>
+          <Button variant="primary" size="sm" onClick={() => {
+            try {
+              navigate("/users/register")
+              console.log("Register button clicked")
+            } catch (error) {
+              console.error("ERROR OCCURED WHILE REDIRECTING TO REGISTER URL:", error)
+            }
+          }}>
             Get Started
           </Button>
         </div>
