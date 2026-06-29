@@ -2,25 +2,24 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
-dotenv.config({ path: "./.env" });
-import passport from "passport";
-import path from "path"; 
+import path from "path";
 import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url); 
-const __dirname = path.dirname(__filename);
-// Load environment variables
+dotenv.config({ path: "./.env" });
+import passport from "passport";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import Passport configuration (registers Google Strategy)
 import "./src/passport.js";
 
 const app = express();
 
-app.use(express.static(path.join(__dirname, "../client/dist")));
-app.get("*", (req, res) => { 
-  res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
-});
+// app.use(express.static(path.join(__dirname, "../client/dist")));
+// app.get("*", (req, res) => { 
+//   res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
+// });
 // Middlewares
 app.use(
   cors({
@@ -52,6 +51,18 @@ app.use("/api/v1/share", shareRouter);
 
 // Google OAuth Routes
 app.use("/auth", googleRouter);
+
+// Serve static files from React build (production)
+import fs from "fs";
+const distPath = path.join(__dirname, "../client/dist");
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  
+  // Fallback to index.html for client-side routing (use regex for Express 5 compatibility)
+  app.get(/.*/i, (req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 // Global Error Handler
 app.use((err, req, res, next) => {

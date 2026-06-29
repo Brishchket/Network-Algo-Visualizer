@@ -34,6 +34,7 @@ function App() {
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/topology/new" element={<ProtectedRoute><TopologyBuilder /></ProtectedRoute>} />
         <Route path="/topology/:id" element={<ProtectedRoute><TopologyBuilder /></ProtectedRoute>} />
+        <Route path="/run" element={<ProtectedRoute><Run /></ProtectedRoute>} />
         <Route path="/run/:id" element={<ProtectedRoute><Run /></ProtectedRoute>} />
         <Route path="/race" element={<ProtectedRoute><Race /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
