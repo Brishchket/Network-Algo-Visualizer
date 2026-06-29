@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ReactFlow, { Controls, Background } from "@xyflow/react";
+import { ReactFlow, Controls, Background } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Zap, ArrowLeft, Flag, SkipBack, SkipForward } from "lucide-react";
 import { getMyTopologies } from "../api/topology.api";

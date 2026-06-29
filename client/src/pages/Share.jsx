@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import ReactFlow, { Controls, Background } from "@xyflow/react";
+import { ReactFlow, Controls, Background } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { SkipBack, SkipForward, ArrowRight } from "lucide-react";
 import { getSharedResource } from "../api/share.api";
