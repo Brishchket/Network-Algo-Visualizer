@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef } from "react";
-import ReactFlow, { Background, useNodesState, useEdgesState } from "reactflow";
-import "reactflow/dist/style.css";
+import { ReactFlow, Background, useNodesState, useEdgesState } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import {
   Play, Zap, GitBranch, Share2,
   AlertTriangle, BarChart2, ArrowRight
