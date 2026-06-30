@@ -15,11 +15,11 @@ const __dirname = path.dirname(__filename);
 import "./src/passport.js";
 
 const app = express();
-
-// app.use(express.static(path.join(__dirname, "../client/dist")));
-// app.get("*", (req, res) => { 
-//   res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
-// });
+app.set('trust proxy', 1)
+app.use(express.static(path.join(__dirname, "../client/dist")));
+app.get("*", (req, res) => { 
+  res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
+});
 // Middlewares
 app.use(
   cors({
@@ -27,6 +27,7 @@ app.use(
     credentials: true,
   })
 );
+
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
