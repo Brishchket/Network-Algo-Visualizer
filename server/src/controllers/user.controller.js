@@ -28,7 +28,7 @@ const generateAccessAndRefreshToken = async (userId) => {
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  sameSite: "lax",   // same-origin now, so lax works and is more reliable
 };
 
 // REGISTER
