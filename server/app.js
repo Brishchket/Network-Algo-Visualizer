@@ -16,10 +16,10 @@ import "./src/passport.js";
 
 const app = express();
 app.set('trust proxy', 1)
-app.use(express.static(path.join(__dirname, "../client/dist")));
-app.get("*", (req, res) => { 
-  res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
-});
+// app.use(express.static(path.join(__dirname, "../client/dist")));
+// app.get("*", (req, res) => { 
+//   res.sendFile(path.join(__dirname, "../client/dist/index.html")); 
+// });
 // Middlewares
 app.use(
   cors({
