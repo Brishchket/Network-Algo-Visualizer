@@ -1,34 +1,21 @@
-import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import useAuthStore from "../store/authStore";
+// src/pages/GoogleCallback.jsx
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore' // adjust import to your actual store
 
 export default function GoogleCallback() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/dashboard";
-  const { checkAuth, isAuthenticated, isCheckingAuth } = useAuthStore();
+  const navigate = useNavigate()
+  const fetchCurrentUser = useAuthStore((s) => s.fetchCurrentUser)
 
   useEffect(() => {
-    const finalizeGoogleAuth = async () => {
-      await checkAuth();
-    };
-
-    finalizeGoogleAuth();
-  }, [checkAuth]);
-
-  useEffect(() => {
-    if (isCheckingAuth) return;
-
-    if (isAuthenticated) {
-      navigate(redirectTo, { replace: true });
-    } else {
-      navigate("/users/login", { replace: true });
-    }
-  }, [isAuthenticated, isCheckingAuth, navigate, redirectTo]);
+    fetchCurrentUser().then((user) => {
+      navigate(user ? '/dashboard' : '/users/login', { replace: true })
+    })
+  }, [])
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0d1117] text-[#e6edf3]">
-      <p>Finishing sign-in...</p>
+    <div className="auth-page">
+      <p className="text-muted">Signing you in...</p>
     </div>
-  );
+  )
 }
