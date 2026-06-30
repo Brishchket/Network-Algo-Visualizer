@@ -20,8 +20,9 @@ export default function Login() {
     try {
       await login(form);
       navigate("/dashboard");
-    } catch {
+    } catch (error) {
       // error handled in store
+      console.log("Error Occured !!!!", error)
     }
   };
 

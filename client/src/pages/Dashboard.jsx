@@ -61,9 +61,9 @@ export default function Dashboard() {
         {/* stats */}
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[
-            { label: "Topologies", value: topologies.length, icon: Network, color: "text-[#00bcd4]" },
-            { label: "Algorithm Runs", value: runs.length, icon: Play, color: "text-[#3b82f6]" },
-            { label: "Public Topologies", value: topologies.filter(t => t.isPublic).length, icon: Clock, color: "text-[#238636]" }
+            { label: "Topologies", value: topologies?.length, icon: Network, color: "text-[#00bcd4]" },
+            { label: "Algorithm Runs", value: runs?.length, icon: Play, color: "text-[#3b82f6]" },
+            { label: "Public Topologies", value: topologies?.filter(t => t.isPublic).length, icon: Clock, color: "text-[#238636]" }
           ].map((stat) => (
             <div key={stat.label} className="bg-[#161b22] border border-[#30363d] rounded-lg p-5 flex items-center gap-4">
               <div className={`${stat.color} bg-current/10 p-2 rounded-md`}>
@@ -88,7 +88,7 @@ export default function Dashboard() {
 
           {isLoading ? (
             <div className="text-[#8b949e] text-sm">Loading...</div>
-          ) : topologies.length === 0 ? (
+          ) : topologies?.length === 0 ? (
             <div className="bg-[#161b22] border border-dashed border-[#30363d] rounded-lg p-12 text-center">
               <Network size={32} className="text-[#30363d] mx-auto mb-3" />
               <p className="text-[#8b949e] text-sm">No topologies yet</p>
@@ -99,7 +99,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-4">
-              {topologies.map((t) => (
+              {topologies?.map((t) => (
                 <div
                   key={t._id}
                   className="bg-[#161b22] border border-[#30363d] rounded-lg p-5 flex flex-col gap-3 hover:border-[#00bcd4]/50 transition-colors"
@@ -116,9 +116,9 @@ export default function Dashboard() {
                   )}
 
                   <div className="flex items-center gap-3 text-xs text-[#8b949e]">
-                    <span>{t.nodes.length} nodes</span>
+                    <span>{t.nodes?.length} nodes</span>
                     <span>·</span>
-                    <span>{t.edges.length} edges</span>
+                    <span>{t.edges?.length} edges</span>
                   </div>
 
                   <div className="flex items-center gap-2 pt-1 border-t border-[#30363d]">
@@ -163,7 +163,7 @@ export default function Dashboard() {
 
           {isLoading ? (
             <div className="text-[#8b949e] text-sm">Loading...</div>
-          ) : runs.length === 0 ? (
+          ) : runs?.length === 0 ? (
             <div className="bg-[#161b22] border border-dashed border-[#30363d] rounded-lg p-8 text-center">
               <p className="text-[#8b949e] text-sm">No runs yet</p>
               <p className="text-[#8b949e] text-xs mt-1">Run an algorithm on a topology to see history</p>

@@ -13,7 +13,7 @@ import Share from "./pages/Share";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/users/login" replace />;
   return children;
 }
 
