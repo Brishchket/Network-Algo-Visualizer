@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ReactFlow, Controls, Background } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
@@ -83,7 +83,14 @@ const buildRFNodes = (nodes, step) => {
       };
     });
   };
+  const topoNodes = useMemo(() => buildRFNodes(resource?.nodes || [], null), [resource]);
+  const topoEdges = useMemo(() => buildRFEdges(resource?.edges || [], null), [resource]);
 
+  const steps = resource?.steps || [];
+  const step = steps[currentStep];
+  const runNodes = useMemo(() => buildRFNodes(resource?.topology?.nodes || [], step), [resource, step]);
+  const runEdges = useMemo(() => buildRFEdges(resource?.topology?.edges || [], step), [resource, step]);
+    
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0d1117] flex items-center justify-center">
@@ -105,8 +112,6 @@ const buildRFNodes = (nodes, step) => {
 
   // shared topology
   if (resourceType === "Topology") {
-    const nodes = resource.nodes || [];
-    const edges = resource.edges || [];
 
     return (
       <div className="min-h-screen bg-[#0d1117] flex flex-col">
@@ -125,8 +130,8 @@ const buildRFNodes = (nodes, step) => {
         </nav>
         <div className="flex-1">
           <ReactFlow
-            nodes={buildRFNodes(nodes, null)}
-            edges={buildRFEdges(edges, null)}
+            nodes={runNodes}
+            edges={runEdges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView
@@ -142,10 +147,6 @@ const buildRFNodes = (nodes, step) => {
   }
 
   // shared run
-  const steps = resource.steps || [];
-  const step = steps[currentStep];
-  const nodes = resource.topology?.nodes || [];
-  const edges = resource.topology?.edges || [];
 
   return (
     <div className="min-h-screen bg-[#0d1117] flex flex-col">
@@ -222,8 +223,8 @@ const buildRFNodes = (nodes, step) => {
         {/* canvas */}
         <div className="flex-1" style={{ height: "calc(100vh - 56px)" }}>
           <ReactFlow
-            nodes={buildRFNodes(nodes, step)}
-            edges={buildRFEdges(edges, step)}
+            nodes={runNodes}
+            edges={runEdges}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView
