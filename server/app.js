@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 // Middlewares
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: "https://netalgovis.onrender.com",
     credentials: true,
   })
 );
