@@ -1,16 +1,18 @@
-// src/pages/GoogleCallback.jsx
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore' // adjust import to your actual store
+import useAuthStore from '../store/authStore'
 
 export default function GoogleCallback() {
   const navigate = useNavigate()
-  const fetchCurrentUser = useAuthStore((s) => s.fetchCurrentUser)
+  const checkAuth = useAuthStore((s) => s.checkAuth)
 
   useEffect(() => {
-    fetchCurrentUser().then((user) => {
-      navigate(user ? '/dashboard' : '/users/login', { replace: true })
-    })
+    const run = async () => {
+      await checkAuth()
+      const { isAuthenticated } = useAuthStore.getState()
+      navigate(isAuthenticated ? '/dashboard' : '/users/login', { replace: true })
+    }
+    run()
   }, [])
 
   return (
