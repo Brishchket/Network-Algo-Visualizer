@@ -14,26 +14,26 @@ import jwt from "jsonwebtoken"
 
 
 const verifyJWT = asyncHandler(async (req, res, next) => {
-    try {
-        // u'll either get token through cookies or throungh header after the Bearer (used when no cookie jar is available ex= mobile apps, POSTMAN)
-        const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "") 
-        if(!token) {
-            throw new ApiError(401, "Unathorized request !!!") // if token doesn't exists throw error
-        }
-    
-        const decodedToken = await jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-        const user = await User.findById(decodedToken._id).select("-password -refreshToken");
-    
-        if(!user) {
-            throw new ApiError(401, "Invalid Access") // if user doesn't exists throw error
-        }
-        req.user = user // adds the user to the request so that we know who is making the request
-        next()
-    } catch (error) {
-        throw new ApiError(500, error || "Something went wrong while accessing your request") // throw any error that occurs in the await function
+    const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
+        throw new ApiError(401, "Unauthorized request");
     }
-})
 
+    let decodedToken;
+    try {
+        decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    } catch (err) {
+        throw new ApiError(401, "Invalid or expired token");
+    }
+
+    const user = await User.findById(decodedToken._id).select("-password -refreshToken");
+    if (!user) {
+        throw new ApiError(401, "Invalid Access");
+    }
+
+    req.user = user;
+    next();
+});
 const verifyJWTOptional = asyncHandler(async (req, res, next) => {
   try {
     const token = req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "");
