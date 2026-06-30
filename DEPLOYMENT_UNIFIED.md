@@ -107,7 +107,7 @@ GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URI=https://your-app-name.onrender.com/api/v1/auth/google/callback
 NODE_ENV=production
-VITE_API_URL=/api/v1
+VITE_VITE_API_URL=/api/v1
 ```
 
 **Note:** `CORS_ORIGIN=*` works because both frontend and backend are on the same server now.
@@ -152,7 +152,7 @@ GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 GOOGLE_CALLBACK_URI=https://your-app-name.onrender.com/api/v1/auth/google/callback
 NODE_ENV=production
-VITE_API_URL=/api/v1
+VITE_VITE_API_URL=/api/v1
 ```
 
 ### 4.4 Deploy
@@ -300,7 +300,7 @@ GOOGLE_CLIENT_ID=920895604984-xxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxxx
 GOOGLE_CALLBACK_URI=https://netalgovis.onrender.com/api/v1/auth/google/callback
 NODE_ENV=production
-VITE_API_URL=/api/v1
+VITE_VITE_API_URL=/api/v1
 ```
 
 ---
@@ -340,7 +340,7 @@ No manual deployment needed!
 ### Frontend Not Loading
 - Check Render logs for 404 errors
 - Verify `server/app.js` has static file serving
-- Check `VITE_API_URL=/api/v1` in environment
+- Check `VITE_VITE_API_URL=/api/v1` in environment
 
 ### API Calls Fail
 - Check CORS_ORIGIN is set
