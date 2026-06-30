@@ -100,7 +100,7 @@ export default function Register() {
           {/* Google button */}
           <button
             type="button"
-            onClick={() => window.location.href = import.meta.env.VITE_GOOGLE_AUTH}
+            onClick={() => window.location.href = import.meta.env.GOOGLE_AUTH}
             className="w-full flex items-center justify-center gap-3 px-4 py-2 rounded-md border border-[#30363d] bg-transparent text-[#e6edf3] text-sm font-medium hover:bg-[#1c2128] transition-colors"
           >
             <svg width="16" height="16" viewBox="0 0 24 24">
