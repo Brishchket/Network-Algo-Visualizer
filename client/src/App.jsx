@@ -10,6 +10,7 @@ import Race from "./pages/Race";
 import History from "./pages/History";
 import Explore from "./pages/Explore";
 import Share from "./pages/Share";
+import GoogleCallback from './pages/GoogleCallback';
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuthStore();
@@ -39,6 +40,7 @@ function App() {
         <Route path="/race" element={<ProtectedRoute><Race /></ProtectedRoute>} />
         <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
         <Route path="/explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+        <Route path="/auth/google/callback" element={<GoogleCallback />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
