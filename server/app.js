@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from "fs";
 
 dotenv.config({ path: "./.env" });
 import passport from "passport";
@@ -15,23 +16,15 @@ const __dirname = path.dirname(__filename);
 import "./src/passport.js";
 
 const app = express();
-app.set('trust proxy', 1)
-app.use(express.static(path.join(__dirname, "../client/dist")));
+app.set("trust proxy", 1);
 
-app.use((req, res, next) => {
-  if (req.method === "GET" && !req.path.startsWith("/api")) {
-    return res.sendFile(path.join(__dirname, "../client/dist/index.html"));
-  }
-  next();
-});
 // Middlewares
 app.use(
   cors({
-    origin: "https://netalgovis.onrender.com",
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
   })
 );
-
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
@@ -58,12 +51,11 @@ app.use("/api/v1/share", shareRouter);
 app.use("/auth", googleRouter);
 
 // Serve static files from React build (production)
-import fs from "fs";
 const distPath = path.join(__dirname, "../client/dist");
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  
-  // Fallback to index.html for client-side routing (use regex for Express 5 compatibility)
+
+  // Fallback to index.html for client-side routing (Express 5 compatible regex)
   app.get(/.*/i, (req, res) => {
     res.sendFile(path.join(distPath, "index.html"));
   });
