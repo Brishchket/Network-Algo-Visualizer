@@ -12,7 +12,7 @@ router.get(
 );
 
 router.get(
-  "/google/callback",
+  "/google/callback/server",
   passport.authenticate("google", {
     session: false,
     failureRedirect: "/users/login",
