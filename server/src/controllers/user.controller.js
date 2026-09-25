@@ -2,6 +2,12 @@ import { User } from "../models/user.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import {
+  generateAndSendOtp,
+  verifyOtp,
+  isEmailVerified,
+  clearVerifiedFlag,
+} from "../utils/otp.js";
 import jwt from "jsonwebtoken";
 
 // cookie structure
@@ -52,10 +58,16 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ $or: [{ username }, { email }] }); // $or searches for username and email and findOne -> first user 
   if (existingUser) {
-    throw new ApiError(409, "Username or email already exists"); // user exists so throw error 
+    throw new ApiError(409, "Username or email already exists");
   }
 
-  const user = await User.create({ username, email, password }); //  create user with the provided field
+  if (!(await isEmailVerified(email))) {
+    throw new ApiError(403, "Please verify your email with the OTP first");
+  }
+
+const user = await User.create({ username, email, password });
+
+await clearVerifiedFlag(email); // one-time use: consume the verified flag now that the account exists
 
   // fetch the user data without password and refreshToken field-> safety (WHO WANTS THERE PASSWORD LEAKED)
   const createdUser = await User.findById(user._id).select("-password -refreshToken"); 
@@ -198,6 +210,54 @@ const googleCallback = asyncHandler(async (req, res) => {
         .redirect(`${frontendOrigin}/auth/google/callback`);
 });
 
+// SEND OTP
+const sendOtp = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new ApiError(400, "Email is required");
+  }
+
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    throw new ApiError(409, "Email already registered");
+  }
+
+  try {
+    await generateAndSendOtp(email);
+  } catch (err) {
+    throw new ApiError(429, err.message || "Could not send OTP");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "OTP sent to email"));
+});
+
+// VERIFY OTP
+const verifyEmailOtp = asyncHandler(async (req, res) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+  }
+
+  let isValid;
+  try {
+    isValid = await verifyOtp(email, otp);
+  } catch (err) {
+    throw new ApiError(429, err.message || "Could not verify OTP");
+  }
+
+  if (!isValid) {
+    throw new ApiError(400, "Invalid or expired OTP");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Email verified successfully"));
+});
+
 
 
 export {
@@ -206,5 +266,7 @@ export {
   logoutUser,
   refreshAccessToken,
   getCurrentUser,
-  googleCallback
+  googleCallback,
+  sendOtp,
+  verifyEmailOtp
 };

@@ -17,10 +17,18 @@ const getCurrentUser = () => api.get("/users/current-user");
 // for user refreshing the user access token
 const refreshToken = () => api.post("/users/refresh-token");
 
+// for requesting an email OTP before registration
+const sendOtp = (data) => api.post("/users/send-otp", data);
+
+// for verifying the email OTP
+const verifyOtp = (data) => api.post("/users/verify-otp", data);
+
 export {
     registerUser,
     loginUser,
     logoutUser,
     getCurrentUser,
-    refreshToken
+    refreshToken,
+    sendOtp,
+    verifyOtp
 }

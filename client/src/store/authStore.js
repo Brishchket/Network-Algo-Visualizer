@@ -1,6 +1,5 @@
 import { create } from "zustand";
-import { getCurrentUser, loginUser, logoutUser, registerUser } from "../api/auth.api";
-
+import { getCurrentUser, loginUser, logoutUser, registerUser, sendOtp, verifyOtp } from "../api/auth.api";
 const useAuthStore = create((set) => ({
   user: null,
   isAuthenticated: false,
@@ -17,6 +16,29 @@ const useAuthStore = create((set) => ({
       set({ user: null, isAuthenticated: false, isCheckingAuth: false });
     }
   },
+
+  sendOtp: async (email) => {
+    set({ isLoading: true, error: null });
+    try {
+      await sendOtp({ email });
+      set({ isLoading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Could not send OTP", isLoading: false });
+      throw err;
+    }
+  },
+
+  verifyOtp: async (email, otp) => {
+    set({ isLoading: true, error: null });
+    try {
+      await verifyOtp({ email, otp });
+      set({ isLoading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Invalid or expired OTP", isLoading: false });
+      throw err;
+    }
+  },
+
 
   register: async (data) => {
     set({ isLoading: true, error: null });

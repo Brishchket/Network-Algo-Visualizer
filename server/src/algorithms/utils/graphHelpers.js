@@ -44,7 +44,14 @@ export function validateGraph(nodes, edges) {
 }
 
 /*
- Creates initial step log entry
+------------------------ step structure ----------------------------------------
+  {
+    stepIndex: 0,
+    action: "visit",
+    node: "A",
+    edge: { from: "A", to: "B", weight: 5 },
+    meta: { distance: 10, previous: "A" }
+  }
 */
 export function createStep(stepIndex, action, node = null, edge = null, meta = {}) {
   return { stepIndex, action, node, edge, meta };    

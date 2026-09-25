@@ -1,6 +1,8 @@
 import { Router } from "express"
 import 
 { 
+  sendOtp,
+  verifyEmailOtp,
   registerUser,
   loginUser,
   logoutUser,
@@ -17,6 +19,12 @@ import { verifyJWT } from "../middlewares/auth.middleware.js"
 
 const router = Router()
 
+// sendOtp
+router.route('/send-otp').post(sendOtp)
+
+// verifyEmailOtp
+router.route('/verify-otp').post(verifyEmailOtp)
+
 //registerUser
 router.route('/register').post(registerUser)
 
@@ -31,6 +39,9 @@ router.route('/refresh-token').post(refreshAccessToken)
 
 // logoutUser
 router.route('/logout').post(verifyJWT, logoutUser)
+
+
+
 
 
 export default router;
