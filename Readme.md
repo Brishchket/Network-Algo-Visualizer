@@ -1,205 +1,303 @@
-# Network Algorithm Visualizer
+# NetAlgoVis
 
-> Step-by-step visualization of graph and network routing algorithms — built for learning, comparison, and exploration.
+A full-stack network algorithm visualizer for learning, comparing, and replaying graph and routing behavior in real time.
 
-
----
-
-## Overview
-
-A React + Node.js platform for building interactive network topologies and stepping through classic graph and routing algorithms. Users can construct networks, run algorithms, and watch detailed execution state unfold — distance tables, visited sets, queues, and routing tables updating in real time.
-
-The key design idea: **algorithms only produce event logs. The UI only replays them.** This clean separation makes the system easy to test, extend, and animate correctly.
+The application combines a React frontend with an Express backend to let users create custom topologies, run graph and networking algorithms, compare results, and share saved runs.
 
 ---
 
-## Algorithms
+## Current Status
 
-| Category | Algorithms |
-|---|---|
-| Graph Search | BFS, DFS |
-| Shortest Path | Dijkstra, Bellman-Ford |
-| Minimum Spanning Tree | Prim's, Kruskal's |
-| Network Routing | Distance Vector Routing (DVR), Link State Routing (LSR) |
+This project is actively implemented as a working application with:
 
-Each algorithm is a pure function: takes a graph, returns a structured **event log** — an array of state snapshots that the playback engine consumes.
+- user authentication and registration flow
+- OTP-based email verification
+- JWT access/refresh token support
+- Google OAuth login
+- protected dashboard and workspace pages
+- topology creation, editing, deletion, and public/private sharing
+- algorithm execution and replay history
+- side-by-side algorithm comparison
+- run sharing via public replay links
+- production-ready Express static serving for the built frontend
 
 ---
 
-## Key Capabilities
+## Features
 
-- **Topology Builder** — drag-and-drop nodes, draw weighted edges, edit or delete components, persist topologies
-- **Playback Engine** — play, pause, step forward/back, and control speed while watching live state
-- **Comparison Mode** — run two algorithms side-by-side on the same topology
-- **Failure Simulation** — remove a node or edge mid-run and observe recovery behavior
-- **Save & Share** — persist topologies and runs, generate shareable replay links
+### Authentication and user management
+
+- Email/password sign up and login
+- OTP verification before creating a user account
+- JWT-based session management with secure cookies
+- Google Sign-In flow through Passport.js
+- Current user and refresh-token handling
+
+### Topology workspace
+
+- Create, edit, and delete network topologies
+- Weighted directed and undirected edges
+- Save topology metadata and node/edge layouts
+- Mark topologies as public or private
+- Browse public topologies from the Explore page
+
+### Algorithm execution and replay
+
+- BFS
+- DFS
+- Dijkstra
+- Bellman-Ford
+- Prim's MST
+- Kruskal's MST
+- Distance Vector Routing
+- Link State Routing
+
+Algorithms run against user-defined topologies and produce execution data that can be replayed visually.
+
+### Comparison and sharing
+
+- Run two algorithms side by side in Race mode
+- Compare convergence step counts and behavior
+- Save run history per user
+- Replay a saved run
+- Generate shareable links for runs and topologies
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
+| Layer | Stack |
 |---|---|
-| Frontend | React, Vite, React Flow, Recharts, Zustand |
+| Frontend | React, Vite, React Router, Zustand, React Flow |
+| UI | Tailwind CSS, Lucide React |
 | Backend | Node.js, Express |
 | Database | MongoDB, Mongoose |
-| Auth | JWT, bcrypt |
-| Tooling | ESLint, Prettier, Nodemon |
+| Cache / sessions | Redis |
+| Auth | JWT, Passport, Google OAuth, bcrypt |
+| Email | Nodemailer + Gmail SMTP |
+| Build/Dev | Vite, Nodemon, ESLint |
 
 ---
 
 ## Repository Structure
 
-```
-client/                          # React frontend (Vite)
-  package.json
-  public/
-  src/
-    App.jsx                      # Router
-    main.jsx                     # Entry point
-    api/                         # HTTP clients
-    components/                  # UI components
-    pages/                       # Route pages
-    store/                       # Zustand state
-    constants/
-    utils/
-
-server/                     # Express backend
-  package.json
-  src/
-    algorithms/                  # Pure algorithm functions
-    controllers/                 # Request handlers
-    models/                      # Mongoose schemas
-    routes/                      # API routes
-    middlewares/                 # Auth middleware
-    db/                          # Database connection
-    utils/                       # Helpers
-
-Readme.md                        # This file
+```text
+NetAlgoVis/
+├── client/                    # React frontend
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.js
+│   └── index.html
+│
+├── server/                    # Express backend
+│   ├── src/
+│   ├── app.js
+│   ├── index.js
+│   ├── package.json
+│   └── .env
+│
+├── Readme.md
+└── package.json (if present in root)
 ```
 
 ---
 
-## Event Log Schema
+## Supported Routes
 
-Every algorithm returns an array of events. The visualizer consumes this array — it never calls algorithm logic directly.
+### Frontend routes
 
-```js
-// Example event log entry
-{
-  step: 4,
-  type: "VISIT_NODE",           // INIT | VISIT_NODE | RELAX_EDGE | UPDATE_TABLE | FINALIZE
-  nodeId: "B",
-  meta: {
-    currentNode: "B",
-    distanceTo: { A: 0, B: 2, C: Infinity, D: 7 },
-    previous:   { A: null, B: "A", C: null, D: null },
-    queue:      ["C", "D"],
-    visited:    ["A", "B"]
-  },
-  message: "Visiting B — relaxing neighbors C and D"
-}
+- `/` — landing page
+- `/users/login` — login
+- `/users/register` — register
+- `/dashboard` — user dashboard
+- `/topology/new` — create topology
+- `/topology/:id` — edit topology
+- `/run` and `/run/:id` — run or replay algorithm
+- `/race` — compare algorithms
+- `/history` — saved runs
+- `/explore` — public topologies
+- `/share/:shareToken` — shared resource replay
+- `/auth/google/callback` — Google auth callback
+
+### Backend API
+
+```text
+/api/v1/users
+  - POST /register
+  - POST /login
+  - POST /logout
+  - POST /refresh-token
+  - GET /current-user
+  - POST /send-otp
+  - POST /verify-otp
+
+/api/v1/topologies
+  - POST /
+  - GET /
+  - GET /public
+  - GET /:id
+  - PATCH /:id
+  - DELETE /:id
+
+/api/v1/algorithms
+  - algorithm execution endpoints
+
+/api/v1/run
+  - run execution and retrieval endpoints
+
+/api/v1/share
+  - share and revoke resource links
+
+/auth
+  - GET /google
+  - GET /google/callback/server
 ```
-
-Getting this schema right early is the most important implementation decision. Every other feature — animation, comparison mode, run history — is just consuming this array.
 
 ---
 
-## Graph Input Format
+## Redis and OTP Verification
 
-```js
-const graph = {
-  nodes: [
-    { id: "A", label: "A", x: 100, y: 200 },
-    { id: "B", label: "B", x: 300, y: 100 }
-  ],
-  edges: [
-    { id: "e1", source: "A", target: "B", weight: 4, directed: false }
-  ]
-}
-```
+This project uses Redis to store temporary OTP data and verification state during registration.
 
----
+### Redis requirement
 
-## Setup
-
-### Prerequisites
-
-- Node.js 20+
-- MongoDB (local or Atlas)
-
-### Backend
-
-1. Open a terminal in `server/`
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Create a `.env` file:
+The server initializes a shared Redis client in [server/src/db/redis.js](server/src/db/redis.js) using:
 
 ```env
-MONGO_URI=your-mongodb-connection-string
-JWT_SECRET=your-secret
-PORT=4000
+REDIS_URL=redis://localhost:6379
 ```
 
-4. Start the backend:
+Redis is required for:
 
-```bash
-npm run dev
+- generating a 6-digit OTP
+- storing the OTP with a 5-minute TTL
+- enforcing resend cooldowns
+- limiting repeated wrong attempts
+- storing a short-lived email verification flag after successful OTP validation
+
+If Redis is not running, OTP-based registration will fail because the app depends on the Redis client to validate email sign-up.
+
+### OTP flow
+
+The OTP workflow is implemented in [server/src/utils/otp.js](server/src/utils/otp.js) and used by the auth controller:
+
+1. User requests an OTP via `/api/v1/users/send-otp`
+2. A 6-digit code is generated and stored in Redis
+3. The code is sent to the user email through SMTP
+4. User submits the OTP via `/api/v1/users/verify-otp`
+5. Server checks the Redis-stored code
+6. On success, a temporary verified flag is set for that email
+7. Registration is allowed only if that flag is present
+
+### OTP behavior
+
+- OTP lifetime: 5 minutes
+- resend cooldown: 45 seconds
+- max wrong attempts: 5
+- lockout duration after too many failures: 10 minutes
+- verified-email flag lifetime before registration: 15 minutes
+
+### Environment Setup
+
+Create a `.env` file inside the `server` folder with variables like the following:
+
+```env
+PORT=8000
+CORS_ORIGIN=http://localhost:5173
+FRONTEND_URI=http://localhost:5173
+NODE_ENV=development
+
+MONGODB_URI=mongodb+srv://...your-connection-string...
+REDIS_URL=redis://localhost:6379
+
+ACCESS_TOKEN_SECRET=your-access-token-secret
+ACCESS_TOKEN_EXPIRY=1d
+REFRESH_TOKEN_SECRET=your-refresh-token-secret
+REFRESH_TOKEN_EXPIRY=10d
+
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+GOOGLE_CALLBACK_URI=http://localhost:8000/auth/google/callback/server
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM="NetAlgoVis <your-email@gmail.com>"
+VITE_GOOGLE_AUTH=/auth/google
+VITE_API_URL=/api/v1
 ```
 
-### Frontend
+> Make sure the Google OAuth callback URL matches the backend route configured in the server.
 
-1. Open a terminal in `client/`
-2. Install dependencies:
+---
+
+## Local Development
+
+### 1) Install frontend dependencies
 
 ```bash
+cd client
 npm install
 ```
 
-3. Start the frontend:
+### 2) Install backend dependencies
 
 ```bash
+cd server
+npm install
+```
+
+### 3) Start the backend
+
+```bash
+cd server
 npm run dev
 ```
 
----
+### 4) Start the frontend
 
-## Development Workflow
+```bash
+cd client
+npm run dev
+```
 
-1. Run backend and frontend concurrently in separate terminals.
-2. Use the React app to build or import a topology.
-3. Execute algorithms and inspect the generated event logs.
-4. Adjust UI or backend logic as needed and refresh.
-
----
-
-## Build Order
-
-This project is built in a deliberate sequence where each phase depends on the previous one being stable:
-
-1. **Algorithm library** — pure functions, no UI, tested on hardcoded graphs
-2. **Graph data model** — define node/edge JSON, write 2–3 test topologies by hand
-3. **Visualizer** — static canvas + playback controls driven by event logs
-4. **Topology builder** — drag-and-drop UI to produce the same JSON you've been hand-writing
-5. **Auth + persistence** — JWT, MongoDB, save/load topologies
-6. **Run history + sharing** — persist event logs, shareable replay links
-7. **Comparison mode + failure simulation** — compositions of everything above
+The frontend typically runs on port `5173` and the backend on `8000` unless changed in the environment.
 
 ---
 
-## Development Philosophy
+## Production Build
 
-**Algorithms and UI are fully decoupled.**
+The backend includes a production static fallback that serves the built frontend from `client/dist` when available.
 
-- Algorithm modules live under `server/src/algorithms` and generate event logs only.
-- The frontend renders event logs and does nothing else.
-- State management and visualization logic live in `client/src`.
+```bash
+cd server
+npm run build
+```
 
-This means every algorithm can be tested with a plain `console.log` before touching React, and the visualizer can be swapped out without touching a single algorithm file.
+This command runs the frontend build and prepares the app for deployment.
+
+---
+
+## Notes
+
+- The project is designed around a clear separation between algorithm logic and UI playback.
+- The backend handles persistence, auth, routes, and execution orchestration.
+- The frontend focuses on interactive topology editing, playback, comparison, and visualization.
+- Shared runs and public topologies are intended for read-only replay and exploration.
+
+---
+
+## Project Goals
+
+NetAlgoVis is intended to help users:
+
+- understand how graph algorithms evolve step by step
+- compare routing and shortest-path strategies visually
+- analyze network behavior under topology changes
+- share results with classmates or collaborators
+- learn network concepts through visual interaction
 
 ---
 
