@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useCallback, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ReactFlow,
@@ -14,7 +14,7 @@ import {
   MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus, Save, ArrowLeft, LayoutTemplate, Check } from "lucide-react";
+import { Plus, Save, ArrowLeft, LayoutTemplate, Check, Undo2, Redo2 } from "lucide-react";
 import useTopologyStore from "../store/topologyStore";
 import AppLayout from "../components/layout/AppLayout";
 import Button from "../components/ui/Button";
@@ -70,7 +70,16 @@ const CustomNode = ({ data }) => {
 
 const nodeTypes = { custom: CustomNode };
 const edgeTypes = {};
-let nodeCounter = 1;
+
+/**
+ * Push a pre-change snapshot onto undoStack (capped at 100) and clear redoStack.
+ * Returns the updated store state slice to pass to `useTopologyStore.setState`.
+ */
+function buildHistoryEntry(snapshot, currentUndoStack) {
+  const newUndoStack = [...currentUndoStack, snapshot];
+  if (newUndoStack.length > 100) newUndoStack.shift();
+  return { undoStack: newUndoStack, redoStack: [] };
+}
 
 export default function TopologyBuilder() {
   const { id } = useParams();
@@ -87,63 +96,182 @@ export default function TopologyBuilder() {
     setIsPublic,
     loadTopology,
     saveTopology,
-    resetCanvas
+    resetCanvas,
+    undoStack,
+    redoStack,
   } = useTopologyStore();
 
+  // React Flow local state
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
   const [edgeWeight, setEdgeWeight] = useState(1);
   const [isDirected, setIsDirected] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
   const [presetFilter, setPresetFilter] = useState("All");
 
-  // ── undo history ──────────────────────────────────────────────────────────
-  const [history, setHistory] = useState([]);
+  // Derived from store stack lengths
+  const canUndo = undoStack.length > 0;
+  const canRedo = redoStack.length > 0;
 
-  const pushHistory = useCallback(() => {
-    setHistory(prev => [...prev.slice(-30), { nodes, edges }]);
+  // ── Drag-start snapshot ref ───────────────────────────────────────────────
+  // Capture state once on dragStart; commit a single history entry on dragStop.
+  const dragStartSnapshot = useRef(null);
+
+  // Mutable counter for new node IDs – useRef avoids the lint rule about
+  // reassigning module-level variables inside a component.
+  const nodeCounterRef = useRef(1);
+
+  const onNodeDragStart = useCallback(() => {
+    const { undoStack: stack, redoStack: redo } = useTopologyStore.getState();
+    dragStartSnapshot.current = {
+      nodes: structuredClone(nodes),
+      edges: structuredClone(edges),
+      undoStack: stack,
+      redoStack: redo,
+    };
   }, [nodes, edges]);
 
-  // Ctrl+Z / Cmd+Z listener
+  const onNodeDragStop = useCallback(() => {
+    const snap = dragStartSnapshot.current;
+    dragStartSnapshot.current = null;
+    if (!snap) return;
+
+    // Check whether any node actually moved
+    const moved = snap.nodes.some((sn) => {
+      const cur = nodes.find((n) => n.id === sn.id);
+      if (!cur) return true;
+      return cur.position.x !== sn.position.x || cur.position.y !== sn.position.y;
+    });
+    if (!moved) return;
+
+    const newUndoStack = [...snap.undoStack, { nodes: snap.nodes, edges: snap.edges }];
+    if (newUndoStack.length > 100) newUndoStack.shift();
+
+    useTopologyStore.setState({
+      nodes,
+      edges,
+      undoStack: newUndoStack,
+      redoStack: [],
+    });
+  }, [nodes, edges]);
+
+  // ── Node deletion via Delete/Backspace key ────────────────────────────────
+  // React Flow fires "remove" change types. We intercept to snapshot first and
+  // also prune connected edges in the same single history entry.
+  const pendingDeleteRef = useRef(false);
+
+  const handleNodesChange = useCallback((changes) => {
+    const hasRemove = changes.some((c) => c.type === "remove");
+
+    if (hasRemove && !pendingDeleteRef.current) {
+      pendingDeleteRef.current = true;
+      const removedIds = new Set(
+        changes.filter((c) => c.type === "remove").map((c) => c.id)
+      );
+      const { undoStack: stack } = useTopologyStore.getState();
+      const snapshot = {
+        nodes: structuredClone(nodes),
+        edges: structuredClone(edges),
+      };
+      const nextEdges = edges.filter(
+        (e) => !removedIds.has(e.source) && !removedIds.has(e.target)
+      );
+      useTopologyStore.setState({
+        ...buildHistoryEntry(snapshot, stack),
+        edges: nextEdges,
+      });
+      setEdges(nextEdges);
+      pendingDeleteRef.current = false;
+    }
+
+    onNodesChange(changes);
+  }, [nodes, edges, onNodesChange, setEdges]);
+
+  // ── Undo ──────────────────────────────────────────────────────────────────
+  const undo = useCallback(() => {
+    const { undoStack: stack, redoStack: redo, nodes: curNodes, edges: curEdges } =
+      useTopologyStore.getState();
+    if (stack.length === 0) return;
+    const prev = stack[stack.length - 1];
+    const snapshot = { nodes: structuredClone(curNodes), edges: structuredClone(curEdges) };
+    useTopologyStore.setState({
+      nodes: prev.nodes,
+      edges: prev.edges,
+      undoStack: stack.slice(0, -1),
+      redoStack: [...redo, snapshot],
+    });
+    setNodes(prev.nodes);
+    setEdges(prev.edges);
+  }, [setNodes, setEdges]);
+
+  // ── Redo ──────────────────────────────────────────────────────────────────
+  const redo = useCallback(() => {
+    const { undoStack: stack, redoStack: redoArr, nodes: curNodes, edges: curEdges } =
+      useTopologyStore.getState();
+    if (redoArr.length === 0) return;
+    const next = redoArr[redoArr.length - 1];
+    const snapshot = { nodes: structuredClone(curNodes), edges: structuredClone(curEdges) };
+    const newUndoStack = [...stack, snapshot];
+    if (newUndoStack.length > 100) newUndoStack.shift();
+    useTopologyStore.setState({
+      nodes: next.nodes,
+      edges: next.edges,
+      undoStack: newUndoStack,
+      redoStack: redoArr.slice(0, -1),
+    });
+    setNodes(next.nodes);
+    setEdges(next.edges);
+  }, [setNodes, setEdges]);
+
+  // ── Keyboard shortcuts ────────────────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "z") {
+      // Ignore when focus is in a text input, textarea, or contenteditable
+      const tag = e.target?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || e.target?.isContentEditable) return;
+
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && !e.shiftKey && e.key === "z") {
         e.preventDefault();
-        setHistory(prev => {
-          if (prev.length === 0) return prev;
-          const last = prev[prev.length - 1];
-          setNodes(last.nodes);
-          setEdges(last.edges);
-          return prev.slice(0, -1);
-        });
+        undo();
+        return;
+      }
+      if ((ctrl && e.shiftKey && e.key === "z") || (ctrl && !e.shiftKey && e.key === "y")) {
+        e.preventDefault();
+        redo();
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setNodes, setEdges]);
-  // ─────────────────────────────────────────────────────────────────────────
+  }, [undo, redo]);
 
+  // ── Load / reset on route change ──────────────────────────────────────────
   useEffect(() => {
     if (id) {
+      // loadTopology clears history inside the store
       loadTopology(id).then(() => {
         const store = useTopologyStore.getState();
         setNodes(store.nodes);
         setEdges(store.edges);
       });
     } else {
+      // resetCanvas clears history inside the store
       resetCanvas();
       setNodes([]);
       setEdges([]);
-      nodeCounter = 1;
+      nodeCounterRef.current = 1;
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // ── Canvas mutations (each pushes one history entry) ─────────────────────
 
   const onConnect = useCallback(
     (params) => {
       const source = params.source;
       const target = params.target;
-
       if (source === target) return;
 
       if (!isDirected) {
@@ -160,8 +288,6 @@ export default function TopologyBuilder() {
         if (exists) return;
       }
 
-      pushHistory(); // snapshot before adding edge
-
       const newEdge = {
         id: `${source}-${target}-${Date.now()}`,
         source,
@@ -172,47 +298,68 @@ export default function TopologyBuilder() {
         labelStyle: { fill: "#8b949e", fontSize: 11 },
         labelBgStyle: { fill: "#161b22" },
         ...(isDirected && {
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#00bcd4" }
-        })
+          markerEnd: { type: MarkerType.ArrowClosed, color: "#00bcd4" },
+        }),
       };
-      setEdges((eds) => addEdge(newEdge, eds));
+
+      const { undoStack: stack } = useTopologyStore.getState();
+      const snapshot = { nodes: structuredClone(nodes), edges: structuredClone(edges) };
+      const nextEdges = addEdge(newEdge, edges);
+      useTopologyStore.setState({
+        edges: nextEdges,
+        ...buildHistoryEntry(snapshot, stack),
+      });
+      setEdges(nextEdges);
     },
-    [edgeWeight, edges, isDirected, setEdges, pushHistory]
+    [edgeWeight, edges, nodes, isDirected, setEdges]
   );
 
-  // click an edge to delete it
+  // Click an edge to delete it
   const onEdgeClick = useCallback(
-    (event, edge) => {
-      pushHistory(); // snapshot before deleting
-      setEdges((eds) => eds.filter((e) => e.id !== edge.id));
+    (_evt, edge) => {
+      const { undoStack: stack } = useTopologyStore.getState();
+      const snapshot = { nodes: structuredClone(nodes), edges: structuredClone(edges) };
+      const nextEdges = edges.filter((e) => e.id !== edge.id);
+      useTopologyStore.setState({
+        edges: nextEdges,
+        ...buildHistoryEntry(snapshot, stack),
+      });
+      setEdges(nextEdges);
     },
-    [pushHistory, setEdges]
+    [nodes, edges, setEdges]
   );
 
   const addNode = () => {
-    pushHistory(); // snapshot before adding node
-    const nodeId = String(nodeCounter++);
-    setNodes((nds) => [...nds, {
+    const { undoStack: stack } = useTopologyStore.getState();
+    const snapshot = { nodes: structuredClone(nodes), edges: structuredClone(edges) };
+    const nodeId = String(nodeCounterRef.current++);
+    const newNode = {
       id: nodeId,
       position: { x: Math.random() * 500 + 80, y: Math.random() * 300 + 80 },
       data: { label: nodeId },
-      type: "custom"
-    }]);
+      type: "custom",
+    };
+    const nextNodes = [...nodes, newNode];
+    useTopologyStore.setState({
+      nodes: nextNodes,
+      ...buildHistoryEntry(snapshot, stack),
+    });
+    setNodes(nextNodes);
   };
 
   const loadPreset = (preset) => {
-    pushHistory(); // snapshot before loading preset
+    // Preset loading clears history (treat as a full canvas reset)
     resetCanvas();
-    nodeCounter = preset.nodes.length + 1;
+    nodeCounterRef.current = preset.nodes.length + 1;
     setTopologyName(preset.name);
     setTopologyDescription(preset.description);
-    setNodes(preset.nodes.map((n) => ({
+    const nextNodes = preset.nodes.map((n) => ({
       id: n.id,
       position: { x: n.x, y: n.y },
       data: { label: n.label },
-      type: "custom"
-    })));
-    setEdges(preset.edges.map((e) => ({
+      type: "custom",
+    }));
+    const nextEdges = preset.edges.map((e) => ({
       id: `${e.from}-${e.to}`,
       source: e.from,
       target: e.to,
@@ -220,8 +367,11 @@ export default function TopologyBuilder() {
       data: { weight: e.weight },
       style: { stroke: "#00bcd4", cursor: "pointer" },
       labelStyle: { fill: "#8b949e", fontSize: 11 },
-      labelBgStyle: { fill: "#161b22" }
-    })));
+      labelBgStyle: { fill: "#161b22" },
+    }));
+    useTopologyStore.setState({ nodes: nextNodes, edges: nextEdges });
+    setNodes(nextNodes);
+    setEdges(nextEdges);
     setShowPresets(false);
   };
 
@@ -236,9 +386,10 @@ export default function TopologyBuilder() {
   };
 
   const filters = ["All", "Routing", "MST", "Networking"];
-  const filteredPresets = presetFilter === "All"
-    ? PRESET_TOPOLOGIES
-    : PRESET_TOPOLOGIES.filter((p) => p.category === presetFilter);
+  const filteredPresets =
+    presetFilter === "All"
+      ? PRESET_TOPOLOGIES
+      : PRESET_TOPOLOGIES.filter((p) => p.category === presetFilter);
 
   return (
     <AppLayout>
@@ -305,6 +456,34 @@ export default function TopologyBuilder() {
             )}
           </div>
 
+          {/* ── Undo / Redo toolbar ── */}
+          <div className="px-5 pb-3 flex gap-2">
+            <button
+              onClick={undo}
+              disabled={!canUndo}
+              title="Undo (Ctrl+Z)"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-all duration-150
+                bg-transparent border-[#30363d] text-[#8b949e]
+                hover:border-[#8b949e] hover:text-[#e6edf3]
+                disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Undo2 size={13} />
+              Undo
+            </button>
+            <button
+              onClick={redo}
+              disabled={!canRedo}
+              title="Redo (Ctrl+Shift+Z / Ctrl+Y)"
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-all duration-150
+                bg-transparent border-[#30363d] text-[#8b949e]
+                hover:border-[#8b949e] hover:text-[#e6edf3]
+                disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <Redo2 size={13} />
+              Redo
+            </button>
+          </div>
+
           <div className="p-5 border-t border-[#30363d] flex flex-col gap-2">
             <Button fullWidth icon={Plus} onClick={addNode}>
               Add Node
@@ -339,12 +518,12 @@ export default function TopologyBuilder() {
           <div className="px-5 pb-5">
             <div className="bg-[#1c2128] rounded-md p-3 flex flex-col gap-1">
               <p className="text-[10px] text-[#8b949e] font-medium uppercase tracking-wide mb-1">Tips</p>
-              <p className="text-[10px] text-[#8b949e]">• CLT + Z to UNDO </p>
+              <p className="text-[10px] text-[#8b949e]">• Ctrl+Z / Cmd+Z to undo</p>
+              <p className="text-[10px] text-[#8b949e]">• Ctrl+Shift+Z / Ctrl+Y to redo</p>
               <p className="text-[10px] text-[#8b949e]">• Drag node handle to connect</p>
               <p className="text-[10px] text-[#8b949e]">• Set weight before connecting</p>
               <p className="text-[10px] text-[#8b949e]">• Click an edge to delete it</p>
               <p className="text-[10px] text-[#8b949e]">• Backspace to delete selected node</p>
-              <p className="text-[10px] text-[#8b949e]">• Ctrl+Z to undo</p>
               <p className="text-[10px] text-[#8b949e]">• Drag nodes to reposition</p>
             </div>
           </div>
@@ -355,10 +534,12 @@ export default function TopologyBuilder() {
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
+            onNodesChange={handleNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             onEdgeClick={onEdgeClick}
+            onNodeDragStart={onNodeDragStart}
+            onNodeDragStop={onNodeDragStop}
             connectionMode={ConnectionMode.Loose}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
@@ -405,8 +586,8 @@ export default function TopologyBuilder() {
                 <div className="h-20 bg-[#0d1117] rounded-md flex items-center justify-center relative overflow-hidden">
                   <svg width="100%" height="100%" viewBox="0 0 200 80">
                     {preset.edges.map((e) => {
-                      const from = preset.nodes.find(n => n.id === e.from);
-                      const to = preset.nodes.find(n => n.id === e.to);
+                      const from = preset.nodes.find((n) => n.id === e.from);
+                      const to = preset.nodes.find((n) => n.id === e.to);
                       if (!from || !to) return null;
                       const scaleX = (x) => (x / 600) * 180 + 10;
                       const scaleY = (y) => (y / 400) * 60 + 10;
