@@ -9,8 +9,16 @@ export default function GoogleCallback() {
   useEffect(() => {
     const run = async () => {
       await checkAuth()
-      const { isAuthenticated } = useAuthStore.getState()
-      navigate(isAuthenticated ? '/dashboard' : '/users/login', { replace: true })
+      const { isAuthenticated, user } = useAuthStore.getState()
+      if (isAuthenticated) {
+          if (user?.needsProfileSetup) {
+              navigate('/complete-profile', { replace: true })
+          } else {
+              navigate('/dashboard', { replace: true })
+          }
+      } else {
+          navigate('/users/login', { replace: true })
+      }
     }
     run()
   }, [])

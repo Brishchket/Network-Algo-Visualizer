@@ -9,16 +9,8 @@ import {
   clearVerifiedFlag,
 } from "../utils/otp.js";
 import jwt from "jsonwebtoken";
-
-// cookie structure
-// {
-//   _id: "...",
-//   username: "...",
-//   email: "...",
-//   password: "..."
-// }
-
-// const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
+import { serializeUser } from "../utils/userSerializer.js";
+import { normalizeUsername, validateUsername, validatePassword } from "../utils/validators.js";
 
 const generateAccessAndRefreshToken = async (userId) => {
   const user = await User.findById(userId);
@@ -26,7 +18,7 @@ const generateAccessAndRefreshToken = async (userId) => {
   const refreshToken = user.generateRefreshToken();
 
   user.refreshToken = refreshToken;
-  await user.save({ validateBeforeSave: false }); // validateBeforeSave: false -> for the required fields
+  await user.save({ validateBeforeSave: false });
 
   return { accessToken, refreshToken };
 };
@@ -34,29 +26,31 @@ const generateAccessAndRefreshToken = async (userId) => {
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",   // same-origin now, so lax works and is more reliable
+  sameSite: "lax",
 };
 
 // REGISTER
 const registerUser = asyncHandler(async (req, res) => {
-
-  /*
-    1. Get username, email, password from the user
-    2. Check if existing user 
-               /              \
-      if yes -> throw         create a user in mongodb
-      an error ("Username or 
-      email exists")
-    3. return the user 
-  */
-
-  const { username, email, password } = req.body; // for request body we will get -> user sends the data through POST request so we will be needing req.body
+  const { email, password } = req.body;
+  let { username } = req.body;
 
   if (!username || !email || !password) {
-    throw new ApiError(400, "All fields are required"); // all three fields are necessary for registering the user
+    throw new ApiError(400, "All fields are required");
+  }
+  
+  username = normalizeUsername(username);
+  
+  const userCheck = validateUsername(username);
+  if (!userCheck.valid) {
+      throw new ApiError(400, userCheck.reason);
+  }
+  
+  const passCheck = validatePassword(password);
+  if (!passCheck.valid) {
+      throw new ApiError(400, passCheck.reason);
   }
 
-  const existingUser = await User.findOne({ $or: [{ username }, { email }] }); // $or searches for username and email and findOne -> first user 
+  const existingUser = await User.findOne({ $or: [{ username }, { email }] });
   if (existingUser) {
     throw new ApiError(409, "Username or email already exists");
   }
@@ -65,82 +59,58 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(403, "Please verify your email with the OTP first");
   }
 
-const user = await User.create({ username, email, password });
+  const user = await User.create({ username, email, password });
+  await clearVerifiedFlag(email);
 
-await clearVerifiedFlag(email); // one-time use: consume the verified flag now that the account exists
+  const createdUser = await User.findById(user._id);
 
-  // fetch the user data without password and refreshToken field-> safety (WHO WANTS THERE PASSWORD LEAKED)
-  const createdUser = await User.findById(user._id).select("-password -refreshToken"); 
-
-  // sending the response
-  return res 
+  return res
     .status(201)
-    .json(new ApiResponse(201, createdUser, "User registered successfully"));
+    .json(new ApiResponse(201, serializeUser(createdUser), "User registered successfully"));
 });
 
 // LOGIN
 const loginUser = asyncHandler(async (req, res) => {
-/*
-1. get email and password from user through req.body
-2. find the user by email -> (if user doesn't exists throw ERROR)
-3. check password -> (if password doesn't match throw ERROR)
-4. generate access and refresh tokens
-5. return success message
-*/
-
-
-  const { email, password } = req.body; // get email and password for req.body
+  const { email, password } = req.body;
 
   if (!email || !password) {
-    throw new ApiError(400, "Email and password are required"); // throw error if any one of the field is missing
+    throw new ApiError(400, "Email and password are required");
   }
 
-  const user = await User.findOne({ email }); // find the user based on the email
+  const user = await User.findOne({ email });
   if (!user) {
-    throw new ApiError(404, "User not found"); // if the user email doesn't exists throw error
+    throw new ApiError(404, "User not found");
+  }
+  
+  if (!user.password) {
+      throw new ApiError(401, "This account uses Google sign-in. Sign in with Google, or set a password from your profile.");
   }
 
-  const isPasswordValid = await user.isPasswordCorrect(password); // check the password
+  const isPasswordValid = await user.isPasswordCorrect(password);
   if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid credentials"); // throw error for wrong password
+    throw new ApiError(401, "Invalid credentials");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id); // generate the access token and refresh token for the user
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-  const loggedInUser = await User.findById(user._id).select("-password -refreshToken"); // fetch the user data without password and refreshToken field
+  const loggedInUser = await User.findById(user._id);
 
-  // return the user data and success message
   return res
     .status(200)
     .cookie("accessToken", accessToken, cookieOptions)
     .cookie("refreshToken", refreshToken, cookieOptions)
-    .json(new ApiResponse(200, { user: loggedInUser, accessToken }, "Login successful"));
+    .json(new ApiResponse(200, { user: serializeUser(loggedInUser), accessToken }, "Login successful"));
 });
 
 
 // LOGOUT
-// verifyJWT middleware runs before this controller,
-// so req.user already contains the authenticated user's data.
 const logoutUser = asyncHandler(async (req, res) => {
-
-  /*
-  1. through the cookie we will get the user id req.user._id
-  2. unset the refreshToken
-  3. remove the cookies from the user browser and send the data
-  */
-
-
-
-  // Remove the refresh token stored in the database
-  // for the currently authenticated user.
   await User.findByIdAndUpdate(
     req.user._id,
     { $unset: { refreshToken: 1 } },
     { new: true }
   );
 
-  // Clear the access and refresh token cookies
-  // from the client's browser and send a success response.
   return res
     .status(200)
     .clearCookie("accessToken", cookieOptions)
@@ -150,30 +120,29 @@ const logoutUser = asyncHandler(async (req, res) => {
 
 // REFRESH TOKEN
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken; // either get the refreshToken from cookies or body
+  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "Unauthorized request"); // if no refreshToken deny access and throw error
+    throw new ApiError(401, "Unauthorized request");
   }
 
   try {
     const decodedToken = jwt.verify(
       incomingRefreshToken,
       process.env.REFRESH_TOKEN_SECRET
-    ); // get the decoded payload of the token
+    );
 
-    const user = await User.findById(decodedToken?._id);  // search the user based on the user id
+    const user = await User.findById(decodedToken?._id);
 
     if (!user) {
-      throw new ApiError(401, "Invalid refresh token"); //return error if user doesn't exists
+      throw new ApiError(401, "Invalid refresh token");
     }
 
     if (incomingRefreshToken !== user?.refreshToken) {
-      throw new ApiError(401, "Refresh token is expired or used"); // if user refreshToken is not matching throw error
+      throw new ApiError(401, "Refresh token is expired or used");
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id); // generate new refreshToken for the user
-    // send the data
+    const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshToken(user._id);
     return res 
       .status(200)
       .cookie("accessToken", accessToken, cookieOptions)
@@ -192,9 +161,10 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 // GET CURRENT USER
 const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
   return res
     .status(200)
-    .json(new ApiResponse(200, req.user, "Current user fetched successfully"));
+    .json(new ApiResponse(200, serializeUser(user), "Current user fetched successfully"));
 });
 
 const googleCallback = asyncHandler(async (req, res) => {
@@ -258,7 +228,161 @@ const verifyEmailOtp = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Email verified successfully"));
 });
 
+// GET /username-available
+const checkUsernameAvailability = asyncHandler(async (req, res) => {
+    let { username } = req.query;
+    if (!username) {
+        return res.status(200).json(new ApiResponse(200, { available: false, reason: "Username is required" }, "Checked"));
+    }
+    
+    username = normalizeUsername(username);
+    const user = await User.findById(req.user._id);
+    if (username === user.username) {
+         return res.status(200).json(new ApiResponse(200, { available: true }, "Checked"));
+    }
+    
+    const check = validateUsername(username);
+    if (!check.valid) {
+        return res.status(200).json(new ApiResponse(200, { available: false, reason: check.reason }, "Checked"));
+    }
+    
+    const exists = await User.exists({ username });
+    if (exists) {
+        return res.status(200).json(new ApiResponse(200, { available: false, reason: "Username is already taken" }, "Checked"));
+    }
+    
+    return res.status(200).json(new ApiResponse(200, { available: true }, "Checked"));
+});
 
+// PATCH /profile
+const updateProfile = asyncHandler(async (req, res) => {
+    const { fullName, bio } = req.body;
+    let { username } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) throw new ApiError(404, "User not found");
+    
+    if (username !== undefined) {
+        username = normalizeUsername(username);
+        if (username !== user.username) {
+            const check = validateUsername(username);
+            if (!check.valid) throw new ApiError(400, check.reason);
+            user.username = username;
+        }
+    }
+    
+    if (fullName !== undefined) {
+        user.fullName = fullName.trim().substring(0, 60);
+    }
+    
+    if (bio !== undefined) {
+        user.bio = bio.trim().substring(0, 160);
+    }
+    
+    try {
+        await user.save();
+    } catch (err) {
+        if (err.code === 11000 && err.keyPattern?.username) {
+            throw new ApiError(409, "Username is already taken");
+        }
+        throw err;
+    }
+    
+    return res.status(200).json(new ApiResponse(200, serializeUser(user), "Profile updated"));
+});
+
+// POST /complete-profile
+const completeProfile = asyncHandler(async (req, res) => {
+    const { password } = req.body;
+    let { username } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) throw new ApiError(404, "User not found");
+    if (user.password) throw new ApiError(409, "Profile is already complete");
+    
+    const passCheck = validatePassword(password);
+    if (!passCheck.valid) throw new ApiError(400, passCheck.reason);
+    user.password = password;
+    
+    if (username !== undefined) {
+        username = normalizeUsername(username);
+        if (username !== user.username) {
+            const check = validateUsername(username);
+            if (!check.valid) throw new ApiError(400, check.reason);
+            user.username = username;
+        }
+    }
+    
+    try {
+        await user.save();
+    } catch (err) {
+        if (err.code === 11000 && err.keyPattern?.username) {
+            throw new ApiError(409, "Username is already taken");
+        }
+        throw err;
+    }
+    
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+    
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json(new ApiResponse(200, serializeUser(user), "Profile completed"));
+});
+
+// POST /password
+const setPassword = asyncHandler(async (req, res) => {
+    const { newPassword } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) throw new ApiError(404, "User not found");
+    if (user.password) throw new ApiError(409, "Password already exists");
+    
+    const passCheck = validatePassword(newPassword);
+    if (!passCheck.valid) throw new ApiError(400, passCheck.reason);
+    
+    user.password = newPassword;
+    await user.save();
+    
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+    
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json(new ApiResponse(200, serializeUser(user), "Password set successfully"));
+});
+
+// PATCH /password
+const changePassword = asyncHandler(async (req, res) => {
+    const { currentPassword, newPassword } = req.body;
+    
+    const user = await User.findById(req.user._id);
+    if (!user) throw new ApiError(404, "User not found");
+    if (!user.password) throw new ApiError(400, "Password not set");
+    
+    const isPasswordValid = await user.isPasswordCorrect(currentPassword);
+    if (!isPasswordValid) throw new ApiError(401, "Incorrect current password");
+    
+    if (currentPassword === newPassword) {
+        throw new ApiError(400, "New password must be different");
+    }
+    
+    const passCheck = validatePassword(newPassword);
+    if (!passCheck.valid) throw new ApiError(400, passCheck.reason);
+    
+    user.password = newPassword;
+    await user.save();
+    
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+    
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json(new ApiResponse(200, serializeUser(user), "Password changed successfully"));
+});
 
 export {
   registerUser,
@@ -268,5 +392,10 @@ export {
   getCurrentUser,
   googleCallback,
   sendOtp,
-  verifyEmailOtp
+  verifyEmailOtp,
+  checkUsernameAvailability,
+  updateProfile,
+  completeProfile,
+  setPassword,
+  changePassword
 };

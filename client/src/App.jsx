@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import useAuthStore from "./store/authStore";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -11,10 +11,19 @@ import History from "./pages/History";
 import Explore from "./pages/Explore";
 import Share from "./pages/Share";
 import GoogleCallback from './pages/GoogleCallback';
+import CompleteProfile from "./pages/CompleteProfile";
+import Profile from "./pages/Profile";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
+  const location = useLocation();
+
   if (!isAuthenticated) return <Navigate to="/users/login" replace />;
+  
+  if (user?.needsProfileSetup && location.pathname !== '/complete-profile') {
+      return <Navigate to="/complete-profile" replace />;
+  }
+  
   return children;
 }
 
@@ -32,6 +41,8 @@ function App() {
         <Route path="/users/login" element={<PublicRoute><Login /></PublicRoute>} />
         <Route path="/users/register" element={<PublicRoute><Register /></PublicRoute>} />
         <Route path="/share/:shareToken" element={<Share />} />
+        <Route path="/complete-profile" element={<ProtectedRoute><CompleteProfile /></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
         <Route path="/topology/new" element={<ProtectedRoute><TopologyBuilder /></ProtectedRoute>} />
         <Route path="/topology/:id" element={<ProtectedRoute><TopologyBuilder /></ProtectedRoute>} />

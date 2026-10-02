@@ -72,6 +72,60 @@ const useAuthStore = create((set) => ({
     }
   },
 
+  updateProfile: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { updateProfile } = await import("../api/profile.api");
+      const res = await updateProfile(data);
+      set({ user: res.data.data, isLoading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Failed to update profile", isLoading: false });
+      throw err;
+    }
+  },
+
+  completeProfile: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { completeProfile } = await import("../api/profile.api");
+      const res = await completeProfile(data);
+      set({ user: res.data.data, isLoading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Failed to complete profile", isLoading: false });
+      throw err;
+    }
+  },
+
+  setPassword: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { setPassword } = await import("../api/profile.api");
+      const res = await setPassword(data);
+      set({ user: res.data.data, isLoading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Failed to set password", isLoading: false });
+      throw err;
+    }
+  },
+
+  changePassword: async (data) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { changePassword } = await import("../api/profile.api");
+      const res = await changePassword(data);
+      set({ user: res.data.data, isLoading: false });
+    } catch (err) {
+      set({ error: err.response?.data?.message || "Failed to change password", isLoading: false });
+      throw err;
+    }
+  },
+
+  checkUsername: async (username) => {
+    const { checkUsernameAvailability } = await import("../api/profile.api");
+    const res = await checkUsernameAvailability(username);
+    return res.data.data;
+  },
+
   clearError: () => set({ error: null })
 }));
 

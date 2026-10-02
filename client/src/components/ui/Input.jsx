@@ -8,7 +8,12 @@ const Input = ({
   required = false,
   error = null,
   icon: Icon = null,
-  className = ""
+  className = "",
+  disabled = false,
+  autoComplete,
+  hint,
+  maxLength,
+  rightSlot = null
 }) => {
   return (
     <div className="flex flex-col gap-1.5">
@@ -30,6 +35,9 @@ const Input = ({
           onChange={onChange}
           placeholder={placeholder}
           required={required}
+          disabled={disabled}
+          autoComplete={autoComplete}
+          maxLength={maxLength}
           className={`
             w-full px-3 py-2 text-sm
             bg-[#1c2128] border border-[#30363d]
@@ -37,14 +45,24 @@ const Input = ({
             rounded-md outline-none
             focus:border-[#00bcd4] focus:ring-1 focus:ring-[#00bcd4]
             transition-colors duration-150
+            disabled:opacity-50 disabled:cursor-not-allowed
             ${Icon ? "pl-9" : ""}
+            ${rightSlot ? "pr-10" : ""}
             ${error ? "border-[#da3633] focus:border-[#da3633] focus:ring-[#da3633]" : ""}
             ${className}
           `}
         />
+        {rightSlot && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                {rightSlot}
+            </div>
+        )}
       </div>
       {error && (
         <p className="text-xs text-[#da3633]">{error}</p>
+      )}
+      {hint && !error && (
+        <p className="text-xs text-[#8b949e]">{hint}</p>
       )}
     </div>
   );

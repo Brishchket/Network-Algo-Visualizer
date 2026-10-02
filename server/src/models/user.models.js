@@ -52,27 +52,48 @@ const userSchema = new mongoose.Schema(
     refreshToken: {
       type: String,
     },
+    fullName: {
+      type: String,
+      trim: true,
+      maxLength: 60,
+    },
+    avatar: {
+      type: String,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxLength: 160,
+    }
   },
   { timestamps: true }
 );
 
+userSchema.set('toJSON', {
+  transform: function (doc, ret, options) {
+    delete ret.password;
+    delete ret.refreshToken;
+    delete ret.googleId;
+    delete ret.__v;
+    return ret;
+  }
+});
 
-userSchema.pre("validate", function (next) {
+userSchema.pre("validate", function () {
     if (!this.password && !this.googleId) {
-      return next(new Error("User must have either a password or a Google ID."));
+      throw new Error("User must have either a password or a Google ID.");
     }
-    next;
 });
 
 // hash password before saving
-userSchema.pre("save", async function (next) {
-  if (!this.password || !this.isModified("password")) return next;
+userSchema.pre("save", async function () {
+  if (!this.password || !this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
-  next;
 });
 
 // compare password
 userSchema.methods.isPasswordCorrect = async function (password) {
+  if (!this.password) return false;
   return await bcrypt.compare(password, this.password);
 };
 

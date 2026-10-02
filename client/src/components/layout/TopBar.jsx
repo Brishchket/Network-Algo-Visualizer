@@ -1,9 +1,11 @@
 import { Search, Share2, Play } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import Button from "../ui/Button";
+import useAuthStore from "../../store/authStore";
 
 export default function TopBar({ onShare = null, showRun = false, onRun = null }) {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
 
   return (
     <header className="h-14 bg-[#161b22] border-b border-[#30363d] flex items-center justify-between px-6 flex-shrink-0">
@@ -30,21 +32,35 @@ export default function TopBar({ onShare = null, showRun = false, onRun = null }
             Share
           </Button>
         )}
-        {/* {showRun && (
-          <Button variant="primary" size="sm" icon={Play} onClick={onRun || (() => navigate("/run"))}>
+        {showRun && (
+          <Button variant="outline" size="sm" icon={Play} onClick={onRun || (() => navigate("/run"))}>
             Run
           </Button>
-        )} */}
-        {/* {!showRun && !onShare && (
-          <Button variant="primary" size="sm" icon={Play} onClick={() => navigate("/run")}>
-            Run
-          </Button>
-        )} */}
-
+        )}
+        
         {/* avatar */}
-        <div className="w-8 h-8 rounded-full bg-[#00bcd4]/20 flex items-center justify-center ml-1">
-          <span className="text-xs font-semibold text-[#00bcd4]">R</span>
-        </div>
+        <Link to="/profile" className="ml-1">
+          {user?.avatar ? (
+            <img 
+              src={user.avatar} 
+              alt={user?.username} 
+              className="w-8 h-8 rounded-full border border-[#30363d] object-cover"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+          ) : null}
+          <div 
+            className="w-8 h-8 rounded-full bg-[#00bcd4]/20 flex items-center justify-center"
+            style={{ display: user?.avatar ? 'none' : 'flex' }}
+          >
+            <span className="text-xs font-semibold text-[#00bcd4] uppercase">
+              {user?.username?.charAt(0) || user?.email?.charAt(0) || "U"}
+            </span>
+          </div>
+        </Link>
       </div>
     </header>
   );

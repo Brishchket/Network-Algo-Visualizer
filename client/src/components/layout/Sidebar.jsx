@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   LayoutDashboard,
   Box,
@@ -17,7 +17,8 @@ const navItems = [
   { icon: Play, label: "Run", path: "/run" },
   { icon: Zap, label: "Race", path: "/race" },
   { icon: History, label: "History", path: "/history" },
-  { icon: Compass, label: "Explore", path: "/explore" }
+  { icon: Compass, label: "Explore", path: "/explore" },
+  { icon: User, label: "Profile", path: "/profile" }
 ];
 
 export default function Sidebar() {
@@ -27,7 +28,7 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate("/users/login");
   };
 
   const isActive = (path) => {
@@ -86,12 +87,15 @@ export default function Sidebar() {
 
       {/* profile + logout */}
       <div className="border-t border-[#30363d] p-3 flex flex-col gap-1">
-        <div className="flex items-center gap-2 px-1 py-1">
-          <div className="w-6 h-6 rounded-full bg-[#00bcd4]/20 flex items-center justify-center">
-            <User size={12} className="text-[#00bcd4]" />
+        <Link to="/profile" className="flex items-center gap-2 px-1 py-1 hover:bg-[#1c2128] rounded transition-colors cursor-pointer">
+          {user?.avatar ? (
+            <img src={user.avatar} className="w-6 h-6 rounded-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} />
+          ) : null}
+          <div className="w-6 h-6 rounded-full bg-[#00bcd4]/20 flex items-center justify-center" style={{ display: user?.avatar ? 'none' : 'flex' }}>
+            <span className="text-[10px] text-[#00bcd4] font-semibold uppercase">{user?.username?.charAt(0) || user?.email?.charAt(0) || "U"}</span>
           </div>
           <span className="text-xs text-[#e6edf3] truncate">{user?.username}</span>
-        </div>
+        </Link>
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-2 px-1 py-1.5 text-xs text-[#8b949e] hover:text-[#da3633] transition-colors rounded"
